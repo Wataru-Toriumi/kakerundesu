@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
 import { oneDark } from "@codemirror/theme-one-dark";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
-import { FilePlus2, FolderOpen, Moon, Save, Sun } from "lucide-react";
+import { Check, ChevronRight, FilePlus2, FileText, Folder, FolderCog, FolderOpen, FolderPlus, Moon, Plus, Save, Sun, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -22,6 +23,176 @@ const initialMarkdown = `# かけるんです
 `;
 
 type Theme = "light" | "dark";
+type MarkdownFile = { name: string; path: string; relativePath: string };
+type LibraryFolder = { relativePath: string };
+type LibraryListing = { files: MarkdownFile[]; folders: LibraryFolder[] };
+type FileNode = { type: "file"; name: string; file: MarkdownFile };
+type FolderNode = { type: "folder"; name: string; key: string; children: TreeNode[] };
+type TreeNode = FileNode | FolderNode;
+
+function buildFileTree(files: MarkdownFile[], folders: LibraryFolder[]): TreeNode[] {
+  const root: FolderNode = { type: "folder", name: "", key: "", children: [] };
+
+  const ensureFolder = (parts: string[]) => {
+    let parent = root;
+    for (const [index, part] of parts.entries()) {
+      const key = parts.slice(0, index + 1).join("/");
+      let folder = parent.children.find(
+        (node): node is FolderNode => node.type === "folder" && node.name === part,
+      );
+      if (!folder) {
+        folder = { type: "folder", name: part, key, children: [] };
+        parent.children.push(folder);
+      }
+      parent = folder;
+    }
+    return parent;
+  };
+
+  for (const folder of folders) {
+    ensureFolder(folder.relativePath.split(/[\\/]/).filter(Boolean));
+  }
+
+  for (const file of files) {
+    const parts = file.relativePath.split(/[\\/]/).filter(Boolean);
+    const name = parts.pop() ?? file.name;
+    ensureFolder(parts).children.push({ type: "file", name, file });
+  }
+
+  const sortNodes = (nodes: TreeNode[]) => {
+    nodes.sort((a, b) => {
+      if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
+      return a.name.localeCompare(b.name, "ja", { sensitivity: "base" });
+    });
+    for (const node of nodes) if (node.type === "folder") sortNodes(node.children);
+  };
+  sortNodes(root.children);
+  return root.children;
+}
+
+function FileTree({
+  nodes,
+  depth = 0,
+  collapsedFolders,
+  activePath,
+  onToggleFolder,
+  onOpenFile,
+  creatingFolder,
+  newFileName,
+  onStartCreate,
+  onChangeNewFileName,
+  onSubmitNewFile,
+  onCancelCreate,
+  creatingDirectory,
+  newDirectoryName,
+  onStartCreateDirectory,
+  onChangeNewDirectoryName,
+  onSubmitNewDirectory,
+  onCancelCreateDirectory,
+}: {
+  nodes: TreeNode[];
+  depth?: number;
+  collapsedFolders: Set<string>;
+  activePath: string | null;
+  onToggleFolder: (key: string) => void;
+  onOpenFile: (path: string) => void;
+  creatingFolder: string | null;
+  newFileName: string;
+  onStartCreate: (relativeFolder: string) => void;
+  onChangeNewFileName: (name: string) => void;
+  onSubmitNewFile: (relativeFolder: string) => void;
+  onCancelCreate: () => void;
+  creatingDirectory: string | null;
+  newDirectoryName: string;
+  onStartCreateDirectory: (relativeParent: string) => void;
+  onChangeNewDirectoryName: (name: string) => void;
+  onSubmitNewDirectory: (relativeParent: string) => void;
+  onCancelCreateDirectory: () => void;
+}) {
+  return nodes.map((node) => {
+    if (node.type === "folder") {
+      const collapsed = collapsedFolders.has(node.key);
+      return (
+        <div className="tree-folder" key={node.key}>
+          <div className="folder-line">
+            <button className="tree-row folder-row" style={{ paddingLeft: 8 + depth * 14 }} onClick={() => onToggleFolder(node.key)}>
+              <ChevronRight className={collapsed ? "" : "expanded"} />
+              {collapsed ? <Folder /> : <FolderOpen />}
+              <span>{node.name}</span>
+            </button>
+            <div className="folder-actions">
+              <button onClick={() => onStartCreate(node.key)} aria-label={`${node.name}に新規ファイルを作成`} title="新規ファイル"><Plus /></button>
+              <button onClick={() => onStartCreateDirectory(node.key)} aria-label={`${node.name}に新規フォルダを作成`} title="新規フォルダ"><FolderPlus /></button>
+            </div>
+          </div>
+          {creatingFolder === node.key && (
+            <form className="new-file-form" style={{ paddingLeft: 24 + (depth + 1) * 14 }} onSubmit={(event) => { event.preventDefault(); onSubmitNewFile(node.key); }}>
+              <FileText />
+              <input
+                autoFocus
+                value={newFileName}
+                onChange={(event) => onChangeNewFileName(event.target.value)}
+                onKeyDown={(event) => { if (event.key === "Escape") onCancelCreate(); }}
+                aria-label="新しいファイル名"
+              />
+              <button type="submit" aria-label="作成"><Check /></button>
+              <button type="button" onClick={onCancelCreate} aria-label="キャンセル"><X /></button>
+            </form>
+          )}
+          {creatingDirectory === node.key && (
+            <form className="new-file-form" style={{ paddingLeft: 24 + (depth + 1) * 14 }} onSubmit={(event) => { event.preventDefault(); onSubmitNewDirectory(node.key); }}>
+              <Folder />
+              <input
+                autoFocus
+                value={newDirectoryName}
+                onChange={(event) => onChangeNewDirectoryName(event.target.value)}
+                onKeyDown={(event) => { if (event.key === "Escape") onCancelCreateDirectory(); }}
+                aria-label="新しいフォルダ名"
+              />
+              <button type="submit" aria-label="作成"><Check /></button>
+              <button type="button" onClick={onCancelCreateDirectory} aria-label="キャンセル"><X /></button>
+            </form>
+          )}
+          {!collapsed && (
+            <FileTree
+              nodes={node.children}
+              depth={depth + 1}
+              collapsedFolders={collapsedFolders}
+              activePath={activePath}
+              onToggleFolder={onToggleFolder}
+              onOpenFile={onOpenFile}
+              creatingFolder={creatingFolder}
+              newFileName={newFileName}
+              onStartCreate={onStartCreate}
+              onChangeNewFileName={onChangeNewFileName}
+              onSubmitNewFile={onSubmitNewFile}
+              onCancelCreate={onCancelCreate}
+              creatingDirectory={creatingDirectory}
+              newDirectoryName={newDirectoryName}
+              onStartCreateDirectory={onStartCreateDirectory}
+              onChangeNewDirectoryName={onChangeNewDirectoryName}
+              onSubmitNewDirectory={onSubmitNewDirectory}
+              onCancelCreateDirectory={onCancelCreateDirectory}
+            />
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <button
+        key={node.file.path}
+        className={`tree-row file-row${node.file.path === activePath ? " active" : ""}`}
+        style={{ paddingLeft: 24 + depth * 14 }}
+        onClick={() => onOpenFile(node.file.path)}
+        title={node.file.relativePath}
+      >
+        <FileText />
+        <span>{node.name}</span>
+      </button>
+    );
+  });
+}
 
 function fileName(path: string | null) {
   if (!path) return "無題.md";
@@ -36,6 +207,17 @@ function App() {
     localStorage.getItem("kakerundesu-theme") === "dark" ? "dark" : "light",
   );
   const [message, setMessage] = useState("新しい文書");
+  const [libraryFolder, setLibraryFolder] = useState<string | null>(() =>
+    localStorage.getItem("kakerundesu-library-folder"),
+  );
+  const [libraryFiles, setLibraryFiles] = useState<MarkdownFile[]>([]);
+  const [libraryFolders, setLibraryFolders] = useState<LibraryFolder[]>([]);
+  const [isLoadingLibrary, setIsLoadingLibrary] = useState(false);
+  const [collapsedFolders, setCollapsedFolders] = useState<Set<string>>(() => new Set());
+  const [creatingFolder, setCreatingFolder] = useState<string | null>(null);
+  const [newFileName, setNewFileName] = useState("無題.md");
+  const [creatingDirectory, setCreatingDirectory] = useState<string | null>(null);
+  const [newDirectoryName, setNewDirectoryName] = useState("新しいフォルダ");
 
   const isDirty = content !== savedContent;
 
@@ -47,23 +229,129 @@ function App() {
     setMessage("新しい文書を作成しました");
   }, [isDirty]);
 
-  const openDocument = useCallback(async () => {
+  const loadDocument = useCallback(async (path: string) => {
     if (isDirty && !window.confirm("保存されていない変更を破棄しますか？")) return;
     try {
-      const selected = await open({
-        multiple: false,
-        filters: [{ name: "Markdown", extensions: ["md", "markdown", "mdx", "txt"] }],
-      });
-      if (!selected) return;
-      const text = await readTextFile(selected);
+      const text = await invoke<string>("read_markdown_file", { path });
       setContent(text);
       setSavedContent(text);
-      setFilePath(selected);
-      setMessage(`${fileName(selected)} を開きました`);
+      setFilePath(path);
+      setMessage(`${fileName(path)} を開きました`);
     } catch (error) {
       setMessage(`開けませんでした: ${String(error)}`);
     }
   }, [isDirty]);
+
+  const openDocument = useCallback(async () => {
+    try {
+      const selected = await open({
+        multiple: false,
+        filters: [{ name: "Markdown", extensions: ["md", "markdown", "mdx"] }],
+      });
+      if (!selected) return;
+      await loadDocument(selected);
+    } catch (error) {
+      setMessage(`開けませんでした: ${String(error)}`);
+    }
+  }, [loadDocument]);
+
+  const refreshLibrary = useCallback(async (folder = libraryFolder) => {
+    if (!folder) {
+      setLibraryFiles([]);
+      setLibraryFolders([]);
+      return;
+    }
+    setIsLoadingLibrary(true);
+    try {
+      const listing = await invoke<LibraryListing>("list_markdown_files", { folder });
+      setLibraryFiles(listing.files);
+      setLibraryFolders(listing.folders);
+      setMessage(`${listing.files.length}件のMarkdownファイルを読み込みました`);
+    } catch (error) {
+      setLibraryFiles([]);
+      setLibraryFolders([]);
+      setMessage(`フォルダを読み込めませんでした: ${String(error)}`);
+    } finally {
+      setIsLoadingLibrary(false);
+    }
+  }, [libraryFolder]);
+
+  const chooseLibraryFolder = useCallback(async () => {
+    try {
+      const selected = await open({ directory: true, multiple: false, defaultPath: libraryFolder ?? undefined });
+      if (!selected) return;
+      setLibraryFolder(selected);
+      localStorage.setItem("kakerundesu-library-folder", selected);
+      await refreshLibrary(selected);
+    } catch (error) {
+      setMessage(`フォルダを設定できませんでした: ${String(error)}`);
+    }
+  }, [libraryFolder, refreshLibrary]);
+
+  const startCreatingFile = useCallback((relativeFolder: string) => {
+    if (!libraryFolder) return;
+    if (isDirty && !window.confirm("保存されていない変更を破棄しますか？")) return;
+    setCollapsedFolders((current) => {
+      const next = new Set(current);
+      next.delete(relativeFolder);
+      return next;
+    });
+    setNewFileName("無題.md");
+    setCreatingDirectory(null);
+    setCreatingFolder(relativeFolder);
+  }, [isDirty, libraryFolder]);
+
+  const createFileInFolder = useCallback(async (relativeFolder: string) => {
+    if (!libraryFolder || !newFileName.trim()) return;
+    try {
+      const path = await invoke<string>("create_markdown_file", {
+        root: libraryFolder,
+        relativeFolder,
+        fileName: newFileName,
+      });
+      setContent("");
+      setSavedContent("");
+      setFilePath(path);
+      setCreatingFolder(null);
+      setMessage(`${fileName(path)} を作成しました`);
+      setCollapsedFolders((current) => {
+        const next = new Set(current);
+        next.delete(relativeFolder);
+        return next;
+      });
+      await refreshLibrary();
+    } catch (error) {
+      setMessage(`ファイルを作成できませんでした: ${String(error)}`);
+    }
+  }, [libraryFolder, newFileName, refreshLibrary]);
+
+  const startCreatingDirectory = useCallback((relativeParent: string) => {
+    if (!libraryFolder) return;
+    setCollapsedFolders((current) => {
+      const next = new Set(current);
+      next.delete(relativeParent);
+      return next;
+    });
+    setNewDirectoryName("新しいフォルダ");
+    setCreatingFolder(null);
+    setCreatingDirectory(relativeParent);
+  }, [libraryFolder]);
+
+  const createDirectory = useCallback(async (relativeParent: string) => {
+    if (!libraryFolder || !newDirectoryName.trim()) return;
+    try {
+      await invoke("create_folder", {
+        root: libraryFolder,
+        relativeParent,
+        folderName: newDirectoryName,
+      });
+      setCreatingDirectory(null);
+      setMessage(`${newDirectoryName.trim()} を作成しました`);
+      await refreshLibrary();
+    } catch (error) {
+      setMessage(`フォルダを作成できませんでした: ${String(error)}`);
+    }
+  }, [libraryFolder, newDirectoryName, refreshLibrary]);
 
   const saveDocument = useCallback(async () => {
     try {
@@ -75,7 +363,7 @@ function App() {
         });
       }
       if (!destination) return;
-      await writeTextFile(destination, content);
+      await invoke("write_markdown_file", { path: destination, content });
       setFilePath(destination);
       setSavedContent(content);
       setMessage(`${fileName(destination)} を保存しました`);
@@ -83,6 +371,36 @@ function App() {
       setMessage(`保存できませんでした: ${String(error)}`);
     }
   }, [content, filePath]);
+
+  useEffect(() => {
+    void refreshLibrary();
+  }, [refreshLibrary]);
+
+  useEffect(() => {
+    if (!libraryFolder) return;
+
+    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+    let disposed = false;
+    let stopListening: (() => void) | undefined;
+
+    void listen("library-changed", () => {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => void refreshLibrary(), 250);
+    }).then((unlisten) => {
+      if (disposed) unlisten();
+      else stopListening = unlisten;
+    });
+
+    void invoke("watch_markdown_folder", { folder: libraryFolder }).catch((error) => {
+      setMessage(`フォルダを監視できませんでした: ${String(error)}`);
+    });
+
+    return () => {
+      disposed = true;
+      clearTimeout(refreshTimer);
+      stopListening?.();
+    };
+  }, [libraryFolder, refreshLibrary]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -117,6 +435,18 @@ function App() {
   }, [isDirty]);
 
   const editorExtensions = useMemo(() => [markdown()], []);
+  const fileTree = useMemo(
+    () => buildFileTree(libraryFiles, libraryFolders),
+    [libraryFiles, libraryFolders],
+  );
+  const toggleFolder = useCallback((key: string) => {
+    setCollapsedFolders((current) => {
+      const next = new Set(current);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
 
   return (
     <main className="app-shell">
@@ -139,6 +469,42 @@ function App() {
       </header>
 
       <section className="workspace">
+        <aside className="library">
+          <div className="pane-title library-title">
+            <span>FILES</span>
+            <span>{isLoadingLibrary ? "読み込み中" : `${libraryFiles.length}件`}</span>
+          </div>
+          <div className="library-folder" title={libraryFolder ?? "フォルダ未設定"}>
+            <FolderOpen />
+            <span>{libraryFolder ? fileName(libraryFolder) : "フォルダ未設定"}</span>
+          </div>
+          <div className="file-list">
+            <FileTree
+              nodes={fileTree}
+              collapsedFolders={collapsedFolders}
+              activePath={filePath}
+              onToggleFolder={toggleFolder}
+              onOpenFile={(path) => void loadDocument(path)}
+              creatingFolder={creatingFolder}
+              newFileName={newFileName}
+              onStartCreate={startCreatingFile}
+              onChangeNewFileName={setNewFileName}
+              onSubmitNewFile={(relativeFolder) => void createFileInFolder(relativeFolder)}
+              onCancelCreate={() => setCreatingFolder(null)}
+              creatingDirectory={creatingDirectory}
+              newDirectoryName={newDirectoryName}
+              onStartCreateDirectory={startCreatingDirectory}
+              onChangeNewDirectoryName={setNewDirectoryName}
+              onSubmitNewDirectory={(relativeParent) => void createDirectory(relativeParent)}
+              onCancelCreateDirectory={() => setCreatingDirectory(null)}
+            />
+            {libraryFolder && !isLoadingLibrary && fileTree.length === 0 && <p>フォルダは空です</p>}
+            {!libraryFolder && <p>表示するフォルダを設定してください</p>}
+          </div>
+          <button className="choose-folder" onClick={() => void chooseLibraryFolder()}>
+            <FolderCog />フォルダを設定
+          </button>
+        </aside>
         <section className="pane editor-pane">
           <div className="pane-title"><span>MARKDOWN</span><span>{content.length.toLocaleString()} 文字</span></div>
           <CodeMirror
