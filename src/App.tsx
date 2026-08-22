@@ -1,20 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import CodeMirror from "@uiw/react-codemirror";
-import { markdown } from "@codemirror/lang-markdown";
-import { oneDark } from "@codemirror/theme-one-dark";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { FolderCog, FolderOpen } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import {
   buildFileTree,
-  FileTree,
   type LibraryFolder,
   type MarkdownFile,
-} from "@/FileTree";
+} from "@/editor/FileTree";
 import { Header } from "@/Header";
+import { Workspace } from "@/editor/Workspace";
 
 const initialMarkdown = `# かけるんです
 
@@ -272,7 +266,6 @@ function App() {
     return () => window.removeEventListener("beforeunload", preventClose);
   }, [isDirty]);
 
-  const editorExtensions = useMemo(() => [markdown()], []);
   const fileTree = useMemo(
     () => buildFileTree(libraryFiles, libraryFolders),
     [libraryFiles, libraryFolders],
@@ -298,62 +291,33 @@ function App() {
         onToggleTheme={() => setTheme(theme === "light" ? "dark" : "light")}
       />
 
-      <section className="workspace">
-        <aside className="library">
-          <div className="pane-title library-title">
-            <span>FILES</span>
-            <span>{isLoadingLibrary ? "読み込み中" : `${libraryFiles.length}件`}</span>
-          </div>
-          <div className="library-folder" title={libraryFolder ?? "フォルダ未設定"}>
-            <FolderOpen />
-            <span>{libraryFolder ? fileName(libraryFolder) : "フォルダ未設定"}</span>
-          </div>
-          <div className="file-list">
-            <FileTree
-              nodes={fileTree}
-              collapsedFolders={collapsedFolders}
-              activePath={filePath}
-              onToggleFolder={toggleFolder}
-              onOpenFile={(path) => void loadDocument(path)}
-              creatingFolder={creatingFolder}
-              newFileName={newFileName}
-              onStartCreate={startCreatingFile}
-              onChangeNewFileName={setNewFileName}
-              onSubmitNewFile={(relativeFolder) => void createFileInFolder(relativeFolder)}
-              onCancelCreate={() => setCreatingFolder(null)}
-              creatingDirectory={creatingDirectory}
-              newDirectoryName={newDirectoryName}
-              onStartCreateDirectory={startCreatingDirectory}
-              onChangeNewDirectoryName={setNewDirectoryName}
-              onSubmitNewDirectory={(relativeParent) => void createDirectory(relativeParent)}
-              onCancelCreateDirectory={() => setCreatingDirectory(null)}
-            />
-            {libraryFolder && !isLoadingLibrary && fileTree.length === 0 && <p>フォルダは空です</p>}
-            {!libraryFolder && <p>表示するフォルダを設定してください</p>}
-          </div>
-          <button className="choose-folder" onClick={() => void chooseLibraryFolder()}>
-            <FolderCog />フォルダを設定
-          </button>
-        </aside>
-        <section className="pane editor-pane">
-          <div className="pane-title"><span>MARKDOWN</span><span>{content.length.toLocaleString()} 文字</span></div>
-          <CodeMirror
-            value={content}
-            height="100%"
-            extensions={editorExtensions}
-            theme={theme === "dark" ? oneDark : "light"}
-            onChange={setContent}
-            basicSetup={{ lineNumbers: true, foldGutter: true, highlightActiveLine: true }}
-          />
-        </section>
-
-        <section className="pane preview-pane">
-          <div className="pane-title"><span>PREVIEW</span><span>GFM</span></div>
-          <article className="markdown-body">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-          </article>
-        </section>
-      </section>
+      <Workspace
+        content={content}
+        theme={theme}
+        onChangeContent={setContent}
+        nodes={fileTree}
+        fileCount={libraryFiles.length}
+        isLoading={isLoadingLibrary}
+        libraryFolder={libraryFolder}
+        libraryName={libraryFolder ? fileName(libraryFolder) : "フォルダ未設定"}
+        collapsedFolders={collapsedFolders}
+        activePath={filePath}
+        onToggleFolder={toggleFolder}
+        onOpenFile={(path) => void loadDocument(path)}
+        creatingFolder={creatingFolder}
+        newFileName={newFileName}
+        onStartCreate={startCreatingFile}
+        onChangeNewFileName={setNewFileName}
+        onSubmitNewFile={(relativeFolder) => void createFileInFolder(relativeFolder)}
+        onCancelCreate={() => setCreatingFolder(null)}
+        creatingDirectory={creatingDirectory}
+        newDirectoryName={newDirectoryName}
+        onStartCreateDirectory={startCreatingDirectory}
+        onChangeNewDirectoryName={setNewDirectoryName}
+        onSubmitNewDirectory={(relativeParent) => void createDirectory(relativeParent)}
+        onCancelCreateDirectory={() => setCreatingDirectory(null)}
+        onChooseFolder={() => void chooseLibraryFolder()}
+      />
 
       <footer className="statusbar">
         <span className={isDirty ? "dirty" : "saved"}>{isDirty ? "未保存の変更があります" : "保存済み"}</span>
