@@ -18,6 +18,16 @@ mise run build
 
 Node.js、pnpm、Rustのバージョンは `.mise.toml` で固定しています。miseを有効化したシェルでは、直接 `pnpm tauri dev` も実行できます。
 
+## UIコンポーネント
+
+スタイリングにはTailwind CSS、UIコンポーネント管理にはshadcn/uiを使用します。生成したコンポーネントは `src/components/ui` に配置され、アプリ側で自由に編集できます。
+
+```bash
+pnpm dlx shadcn@latest add dialog
+```
+
+共通のクラス名結合には `src/lib/utils.ts` の `cn` を使用します。
+
 ## キーボードショートカット
 
 - `Cmd/Ctrl + N`: 新規作成
