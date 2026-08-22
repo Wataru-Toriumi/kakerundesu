@@ -1,0 +1,4 @@
+interface:
+  display_name: "プロジェクトルール検証"
+  short_description: "変更内容がリポジトリ内のプロジェクト規約へ準拠しているか検証する"
+  default_prompt: "$validate-project-rules を使って、現在の変更がリポジトリのルールに準拠しているか検証してください。"
