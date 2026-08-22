@@ -5,7 +5,7 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { FilePlus2, FolderCog, FolderOpen, Moon, Save, Sun } from "lucide-react";
+import { FolderCog, FolderOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -14,6 +14,7 @@ import {
   type LibraryFolder,
   type MarkdownFile,
 } from "@/FileTree";
+import { Header } from "@/Header";
 
 const initialMarkdown = `# かけるんです
 
@@ -287,23 +288,15 @@ function App() {
 
   return (
     <main className="app-shell">
-      <header className="topbar">
-        <div className="brand">
-          <span className="brand-mark">か</span>
-          <div>
-            <strong>かけるんです</strong>
-            <span className="file-name">{fileName(filePath)}{isDirty ? " •" : ""}</span>
-          </div>
-        </div>
-        <nav className="actions" aria-label="ファイル操作">
-          <button onClick={newDocument} title="新規作成 (⌘/Ctrl+N)"><FilePlus2 />新規</button>
-          <button onClick={() => void openDocument()} title="開く (⌘/Ctrl+O)"><FolderOpen />開く</button>
-          <button className="primary" onClick={() => void saveDocument()} title="保存 (⌘/Ctrl+S)"><Save />保存</button>
-          <button className="icon-button" onClick={() => setTheme(theme === "light" ? "dark" : "light")} aria-label="テーマを切り替える">
-            {theme === "light" ? <Moon /> : <Sun />}
-          </button>
-        </nav>
-      </header>
+      <Header
+        fileName={fileName(filePath)}
+        isDirty={isDirty}
+        theme={theme}
+        onNewDocument={newDocument}
+        onOpenDocument={() => void openDocument()}
+        onSaveDocument={() => void saveDocument()}
+        onToggleTheme={() => setTheme(theme === "light" ? "dark" : "light")}
+      />
 
       <section className="workspace">
         <aside className="library">
