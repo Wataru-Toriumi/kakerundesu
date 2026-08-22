@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open, save } from "@tauri-apps/plugin-dialog";
+import { AppShell } from "@/components/app/AppShell";
 import {
   buildFileTree,
   type LibraryFolder,
@@ -281,7 +282,7 @@ function App() {
   }, []);
 
   return (
-    <main className="app-shell">
+    <AppShell>
       <Header
         fileName={fileName(filePath)}
         isDirty={isDirty}
@@ -321,7 +322,7 @@ function App() {
       />
 
       <Footer isDirty={isDirty} message={message} />
-    </main>
+    </AppShell>
   );
 }
 
