@@ -7,6 +7,7 @@ import {
   type LibraryFolder,
   type MarkdownFile,
 } from "@/editor/FileTree";
+import { Footer } from "@/Footer";
 import { Header } from "@/Header";
 import { Workspace } from "@/editor/Workspace";
 
@@ -319,10 +320,7 @@ function App() {
         onChooseFolder={() => void chooseLibraryFolder()}
       />
 
-      <footer className="statusbar">
-        <span className={isDirty ? "dirty" : "saved"}>{isDirty ? "未保存の変更があります" : "保存済み"}</span>
-        <span>{message}</span>
-      </footer>
+      <Footer isDirty={isDirty} message={message} />
     </main>
   );
 }
