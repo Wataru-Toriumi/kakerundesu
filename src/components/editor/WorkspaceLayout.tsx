@@ -1,5 +1,28 @@
-import type { ReactNode } from "react";
+import { Children, Fragment, useEffect, useState, type ReactNode } from "react";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 export function WorkspaceLayout({ children }: { children: ReactNode }) {
-  return <section className="grid min-h-0 grid-cols-[220px_minmax(0,1fr)_minmax(0,1fr)] max-[720px]:grid-cols-1 max-[720px]:grid-rows-[160px_1fr_1fr]">{children}</section>;
+  const [isNarrow, setIsNarrow] = useState(() => window.matchMedia("(max-width: 720px)").matches);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 720px)");
+    const update = () => setIsNarrow(media.matches);
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
+  const panels = Children.toArray(children);
+
+  return (
+    <ResizablePanelGroup orientation={isNarrow ? "vertical" : "horizontal"} className="min-h-0">
+      {panels.map((panel, index) => (
+        <Fragment key={index}>
+          {index > 0 && <ResizableHandle />}
+          <ResizablePanel defaultSize={isNarrow ? (index === 0 ? "25%" : "37.5%") : (index === 0 ? "18%" : "41%")} minSize={isNarrow ? "15%" : index === 0 ? "12%" : "20%"}>
+            {panel}
+          </ResizablePanel>
+        </Fragment>
+      ))}
+    </ResizablePanelGroup>
+  );
 }
