@@ -45,7 +45,36 @@ button { font: inherit; }
 .actions button.icon-button { width: 36px; padding: 0; justify-content: center; }
 .actions svg { width: 16px; height: 16px; }
 
-.workspace { min-height: 0; display: grid; grid-template-columns: 1fr 1fr; }
+.workspace { min-height: 0; display: grid; grid-template-columns: 220px minmax(0, 1fr) minmax(0, 1fr); }
+.library { min-width: 0; min-height: 0; display: grid; grid-template-rows: 36px 38px 1fr 48px; border-right: 1px solid var(--line); background: var(--panel); }
+.library-title svg, .library-folder svg, .file-list svg, .choose-folder svg { width: 14px; height: 14px; flex: 0 0 auto; }
+.library-folder { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 0 12px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+.library-folder span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-list { min-height: 0; overflow: auto; padding: 7px; }
+.file-list .tree-row { display: flex; align-items: center; gap: 6px; width: 100%; min-height: 30px; padding-right: 8px; border: 0; border-radius: 6px; color: var(--muted); background: transparent; cursor: pointer; text-align: left; }
+.file-list .tree-row:hover { color: inherit; background: var(--code); }
+.file-list .tree-row.active { color: var(--accent); background: var(--code); }
+.file-list .tree-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.file-list .folder-row { color: inherit; font-weight: 600; }
+.folder-line { position: relative; display: flex; min-width: 0; }
+.folder-line .folder-row { padding-right: 54px; }
+.folder-actions { position: absolute; right: 3px; top: 3px; display: flex; opacity: 0; }
+.folder-line:hover .folder-actions, .folder-actions:focus-within { opacity: 1; }
+.folder-actions button { display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 5px; color: var(--muted); background: transparent; cursor: pointer; }
+.folder-actions button:hover { color: var(--accent); background: var(--panel); }
+.file-list .folder-actions svg { width: 13px; height: 13px; }
+.new-file-form { display: flex; align-items: center; gap: 4px; height: 32px; padding-right: 5px; }
+.new-file-form > svg { color: var(--accent); }
+.new-file-form input { min-width: 0; flex: 1; height: 25px; padding: 0 6px; border: 1px solid var(--accent); border-radius: 5px; color: inherit; background: var(--panel); font: 11px "SFMono-Regular", Consolas, monospace; outline: none; }
+.new-file-form button { display: grid; place-items: center; width: 23px; height: 23px; padding: 0; border: 0; border-radius: 4px; color: var(--muted); background: transparent; cursor: pointer; }
+.new-file-form button:hover { color: var(--accent); background: var(--code); }
+.file-list .new-file-form button svg { width: 12px; height: 12px; }
+.file-list .folder-row svg:first-child { width: 12px; height: 12px; transition: transform 120ms ease; }
+.file-list .folder-row svg:first-child.expanded { transform: rotate(90deg); }
+.tree-folder { min-width: 0; }
+.file-list p { margin: 16px 10px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.choose-folder { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 7px; border: 1px solid var(--line); border-radius: 7px; color: inherit; background: transparent; cursor: pointer; font-size: 11px; }
+.choose-folder:hover { background: var(--code); }
 .pane { min-width: 0; min-height: 0; display: grid; grid-template-rows: 36px 1fr; background: var(--panel); }
 .editor-pane { border-right: 1px solid var(--line); }
 .pane-title { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .12em; user-select: none; }
@@ -73,7 +102,9 @@ button { font: inherit; }
 .saved { color: #4b8c5a; }
 
 @media (max-width: 720px) {
-  .workspace { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+  .workspace { grid-template-columns: 1fr; grid-template-rows: 160px 1fr 1fr; }
+  .library { grid-template-rows: 36px 1fr 42px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .library-folder { display: none; }
   .editor-pane { border-right: 0; border-bottom: 1px solid var(--line); }
   .actions button { width: 36px; padding: 0; justify-content: center; font-size: 0; }
   .actions svg { width: 17px; height: 17px; }
