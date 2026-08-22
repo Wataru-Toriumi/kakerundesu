@@ -1,4 +1,11 @@
 import { FolderCog, FolderOpen } from "lucide-react";
+import { ChooseFolderButton } from "@/components/editor/ChooseFolderButton";
+import { EmptyLibrary } from "@/components/editor/EmptyLibrary";
+import { FileList } from "@/components/editor/FileList";
+import { LibraryFolder } from "@/components/editor/LibraryFolder";
+import { LibraryLayout } from "@/components/editor/LibraryLayout";
+import { PaneTitle } from "@/components/editor/PaneTitle";
+import { TruncatedText } from "@/components/editor/TruncatedText";
 import { FileTree, type TreeNode } from "@/editor/FileTree";
 
 export type LibrarySidebarProps = {
@@ -51,16 +58,13 @@ export function LibrarySidebar({
   onChooseFolder,
 }: LibrarySidebarProps) {
   return (
-    <aside className="library">
-      <div className="pane-title library-title">
-        <span>FILES</span>
-        <span>{isLoading ? "読み込み中" : `${fileCount}件`}</span>
-      </div>
-      <div className="library-folder" title={libraryFolder ?? "フォルダ未設定"}>
+    <LibraryLayout>
+      <PaneTitle title="FILES" meta={isLoading ? "読み込み中" : `${fileCount}件`} library />
+      <LibraryFolder title={libraryFolder ?? "フォルダ未設定"}>
         <FolderOpen />
-        <span>{libraryName}</span>
-      </div>
-      <div className="file-list">
+        <TruncatedText>{libraryName}</TruncatedText>
+      </LibraryFolder>
+      <FileList>
         <FileTree
           nodes={nodes}
           collapsedFolders={collapsedFolders}
@@ -80,12 +84,12 @@ export function LibrarySidebar({
           onSubmitNewDirectory={onSubmitNewDirectory}
           onCancelCreateDirectory={onCancelCreateDirectory}
         />
-        {libraryFolder && !isLoading && nodes.length === 0 && <p>フォルダは空です</p>}
-        {!libraryFolder && <p>表示するフォルダを設定してください</p>}
-      </div>
-      <button className="choose-folder" onClick={onChooseFolder}>
+        {libraryFolder && !isLoading && nodes.length === 0 && <EmptyLibrary>フォルダは空です</EmptyLibrary>}
+        {!libraryFolder && <EmptyLibrary>表示するフォルダを設定してください</EmptyLibrary>}
+      </FileList>
+      <ChooseFolderButton onClick={onChooseFolder}>
         <FolderCog />フォルダを設定
-      </button>
-    </aside>
+      </ChooseFolderButton>
+    </LibraryLayout>
   );
 }

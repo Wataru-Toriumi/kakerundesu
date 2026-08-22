@@ -1,4 +1,8 @@
 import { FilePlus2, FolderOpen, Moon, Save, Sun } from "lucide-react";
+import { Brand } from "@/components/app/Brand";
+import { HeaderAction } from "@/components/app/HeaderAction";
+import { HeaderActions } from "@/components/app/HeaderActions";
+import { Topbar } from "@/components/app/Topbar";
 
 type HeaderProps = {
   fileName: string;
@@ -20,22 +24,14 @@ export function Header({
   onToggleTheme,
 }: HeaderProps) {
   return (
-    <header className="topbar">
-      <div className="brand">
-        <span className="brand-mark">か</span>
-        <div>
-          <strong>かけるんです</strong>
-          <span className="file-name">{fileName}{isDirty ? " •" : ""}</span>
-        </div>
-      </div>
-      <nav className="actions" aria-label="ファイル操作">
-        <button onClick={onNewDocument} title="新規作成 (⌘/Ctrl+N)"><FilePlus2 />新規</button>
-        <button onClick={onOpenDocument} title="開く (⌘/Ctrl+O)"><FolderOpen />開く</button>
-        <button className="primary" onClick={onSaveDocument} title="保存 (⌘/Ctrl+S)"><Save />保存</button>
-        <button className="icon-button" onClick={onToggleTheme} aria-label="テーマを切り替える">
-          {theme === "light" ? <Moon /> : <Sun />}
-        </button>
-      </nav>
-    </header>
+    <Topbar>
+      <Brand fileName={fileName} isDirty={isDirty} />
+      <HeaderActions>
+        <HeaderAction icon={FilePlus2} label="新規" onClick={onNewDocument} title="新規作成 (⌘/Ctrl+N)" />
+        <HeaderAction icon={FolderOpen} label="開く" onClick={onOpenDocument} title="開く (⌘/Ctrl+O)" />
+        <HeaderAction icon={Save} label="保存" onClick={onSaveDocument} title="保存 (⌘/Ctrl+S)" primary />
+        <HeaderAction icon={theme === "light" ? Moon : Sun} label="テーマを切り替える" onClick={onToggleTheme} iconOnly />
+      </HeaderActions>
+    </Topbar>
   );
 }

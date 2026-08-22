@@ -8,6 +8,15 @@ import {
   Plus,
   X,
 } from "lucide-react";
+import { FolderAction } from "@/components/editor/FolderAction";
+import { FolderActions } from "@/components/editor/FolderActions";
+import { FolderChevron } from "@/components/editor/FolderChevron";
+import { FolderLine } from "@/components/editor/FolderLine";
+import { NewItemAction } from "@/components/editor/NewItemAction";
+import { NewItemForm } from "@/components/editor/NewItemForm";
+import { NewItemInput } from "@/components/editor/NewItemInput";
+import { TreeFolder } from "@/components/editor/TreeFolder";
+import { TreeRow } from "@/components/editor/TreeRow";
 
 export type MarkdownFile = { name: string; path: string; relativePath: string };
 export type LibraryFolder = { relativePath: string };
@@ -101,45 +110,45 @@ export function FileTree({
     if (node.type === "folder") {
       const collapsed = collapsedFolders.has(node.key);
       return (
-        <div className="tree-folder" key={node.key}>
-          <div className="folder-line">
-            <button className="tree-row folder-row" style={{ paddingLeft: 8 + depth * 14 }} onClick={() => onToggleFolder(node.key)}>
-              <ChevronRight className={collapsed ? "" : "expanded"} />
+        <TreeFolder key={node.key}>
+          <FolderLine>
+            <TreeRow depth={depth} kind="folder" onClick={() => onToggleFolder(node.key)}>
+              <FolderChevron expanded={!collapsed}><ChevronRight /></FolderChevron>
               {collapsed ? <Folder /> : <FolderOpen />}
               <span>{node.name}</span>
-            </button>
-            <div className="folder-actions">
-              <button onClick={() => onStartCreate(node.key)} aria-label={`${node.name}に新規ファイルを作成`} title="新規ファイル"><Plus /></button>
-              <button onClick={() => onStartCreateDirectory(node.key)} aria-label={`${node.name}に新規フォルダを作成`} title="新規フォルダ"><FolderPlus /></button>
-            </div>
-          </div>
+            </TreeRow>
+            <FolderActions>
+              <FolderAction onClick={() => onStartCreate(node.key)} label={`${node.name}に新規ファイルを作成`} title="新規ファイル"><Plus /></FolderAction>
+              <FolderAction onClick={() => onStartCreateDirectory(node.key)} label={`${node.name}に新規フォルダを作成`} title="新規フォルダ"><FolderPlus /></FolderAction>
+            </FolderActions>
+          </FolderLine>
           {creatingFolder === node.key && (
-            <form className="new-file-form" style={{ paddingLeft: 24 + (depth + 1) * 14 }} onSubmit={(event) => { event.preventDefault(); onSubmitNewFile(node.key); }}>
+            <NewItemForm depth={depth} onSubmit={() => onSubmitNewFile(node.key)}>
               <FileText />
-              <input
+              <NewItemInput
                 autoFocus
                 value={newFileName}
                 onChange={(event) => onChangeNewFileName(event.target.value)}
                 onKeyDown={(event) => { if (event.key === "Escape") onCancelCreate(); }}
                 aria-label="新しいファイル名"
               />
-              <button type="submit" aria-label="作成"><Check /></button>
-              <button type="button" onClick={onCancelCreate} aria-label="キャンセル"><X /></button>
-            </form>
+              <NewItemAction type="submit" label="作成"><Check /></NewItemAction>
+              <NewItemAction type="button" onClick={onCancelCreate} label="キャンセル"><X /></NewItemAction>
+            </NewItemForm>
           )}
           {creatingDirectory === node.key && (
-            <form className="new-file-form" style={{ paddingLeft: 24 + (depth + 1) * 14 }} onSubmit={(event) => { event.preventDefault(); onSubmitNewDirectory(node.key); }}>
+            <NewItemForm depth={depth} onSubmit={() => onSubmitNewDirectory(node.key)}>
               <Folder />
-              <input
+              <NewItemInput
                 autoFocus
                 value={newDirectoryName}
                 onChange={(event) => onChangeNewDirectoryName(event.target.value)}
                 onKeyDown={(event) => { if (event.key === "Escape") onCancelCreateDirectory(); }}
                 aria-label="新しいフォルダ名"
               />
-              <button type="submit" aria-label="作成"><Check /></button>
-              <button type="button" onClick={onCancelCreateDirectory} aria-label="キャンセル"><X /></button>
-            </form>
+              <NewItemAction type="submit" label="作成"><Check /></NewItemAction>
+              <NewItemAction type="button" onClick={onCancelCreateDirectory} label="キャンセル"><X /></NewItemAction>
+            </NewItemForm>
           )}
           {!collapsed && (
             <FileTree
@@ -163,21 +172,22 @@ export function FileTree({
               onCancelCreateDirectory={onCancelCreateDirectory}
             />
           )}
-        </div>
+        </TreeFolder>
       );
     }
 
     return (
-      <button
+      <TreeRow
         key={node.file.path}
-        className={`tree-row file-row${node.file.path === activePath ? " active" : ""}`}
-        style={{ paddingLeft: 24 + depth * 14 }}
+        depth={depth}
+        kind="file"
+        active={node.file.path === activePath}
         onClick={() => onOpenFile(node.file.path)}
         title={node.file.relativePath}
       >
         <FileText />
         <span>{node.name}</span>
-      </button>
+      </TreeRow>
     );
   });
 }
