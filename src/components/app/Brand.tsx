@@ -1,13 +1,24 @@
+import { Box } from "@/components/layout/Box";
+import { Grid } from "@/components/layout/Grid";
+import { Inline } from "@/components/layout/Inline";
+import { Stack } from "@/components/layout/Stack";
+
 export function Brand({ fileName, isDirty }: { fileName: string; isDirty: boolean }) {
   return (
-    <div className="flex min-w-0 items-center gap-2.5">
-      <span className="grid size-[34px] place-items-center rounded-[10px] bg-[var(--app-accent)] font-extrabold text-white">か</span>
-      <div>
-        <strong className="block text-sm tracking-[.02em]">かけるんです</strong>
-        <span className="mt-0.5 block max-w-[42vw] overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-[var(--app-muted)]">
-          {fileName}{isDirty ? " •" : ""}
+    <Inline align="center" gap="3" minWidth="0">
+      <Grid asChild align="center" height="34px" justifyItems="center" width="34px">
+        <span className="rounded-[10px] bg-[var(--app-accent)] font-extrabold text-white">
+          か
         </span>
-      </div>
-    </div>
+      </Grid>
+      <Stack minWidth="0">
+        <strong className="text-sm tracking-[.02em]">かけるんです</strong>
+        <Box asChild maxWidth="42vw" mt="2px">
+          <span className="overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-[var(--app-muted)]">
+            {fileName}{isDirty ? " •" : ""}
+          </span>
+        </Box>
+      </Stack>
+    </Inline>
   );
 }

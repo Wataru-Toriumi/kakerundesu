@@ -1,5 +1,12 @@
 import type { ReactNode } from "react";
+import { Inline } from "@/components/layout/Inline";
 
 export function Topbar({ children }: { children: ReactNode }) {
-  return <header className="flex select-none items-center justify-between border-b border-[var(--line)] bg-[var(--panel)] px-[18px]">{children}</header>;
+  return (
+    <Inline asChild align="center" justify="between">
+      <header className="select-none border-b border-[var(--line)] bg-[var(--panel)] px-[18px]">
+        {children}
+      </header>
+    </Inline>
+  );
 }

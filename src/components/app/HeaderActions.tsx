@@ -1,5 +1,10 @@
 import type { ReactNode } from "react";
+import { Inline } from "@/components/layout/Inline";
 
 export function HeaderActions({ children }: { children: ReactNode }) {
-  return <nav className="flex gap-[7px]" aria-label="ファイル操作">{children}</nav>;
+  return (
+    <Inline asChild gap="2">
+      <nav aria-label="ファイル操作">{children}</nav>
+    </Inline>
+  );
 }

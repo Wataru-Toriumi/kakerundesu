@@ -1,5 +1,10 @@
 import type { ReactNode } from "react";
+import { Box } from "@/components/layout/Box";
 
 export function EditorSurface({ children }: { children: ReactNode }) {
-  return <div className="cm-theme min-h-0 overflow-auto bg-[var(--editor)]">{children}</div>;
+  return (
+    <Box asChild minHeight="0" overflow="auto">
+      <div className="cm-theme bg-[var(--editor)]">{children}</div>
+    </Box>
+  );
 }
