@@ -1,3 +1,4 @@
+import type { BoxProps } from "@radix-ui/themes/components/box";
 import type { FlexProps } from "@radix-ui/themes/components/flex";
 import type { GridProps } from "@radix-ui/themes/components/grid";
 
@@ -31,6 +32,9 @@ type LayoutProps = Pick<
   | "top"
   | "width"
 >;
+
+export type BoxLayoutProps = LayoutProps &
+  Pick<BoxProps, "as" | "display" | "m" | "mb" | "ml" | "mr" | "mt" | "mx" | "my">;
 
 export type FlexLayoutProps = LayoutProps &
   Pick<FlexProps, "align" | "justify" | "wrap"> & {

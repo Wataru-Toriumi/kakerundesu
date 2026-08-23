@@ -1,4 +1,4 @@
-@layer radix, theme, base, components, utilities;
+@layer theme, base, radix, components, utilities;
 @import "@radix-ui/themes/layout.css" layer(radix);
 @import "tailwindcss";
 @import "tw-animate-css";

@@ -4,8 +4,9 @@
   確認し、用途に合う場合はshadcn/uiを優先すること。
 - `src/components/ui/` はshadcn管理のコードとして扱うこと。プロジェクト
   固有の明確な理由がない限り、生成された構成とファイル構造を維持すること。
-- 単純な縦方向、横方向、格子状の配置には、Radix Themesを内包する
-  `src/components/layout/` の `Stack`、`Inline`、`Grid` を使用すること。
+- 単純な汎用コンテナ、縦方向、横方向、格子状の配置には、Radix Themesを
+  内包する `src/components/layout/` の `Box`、`Stack`、`Inline`、`Grid` を
+  使用すること。
   利用側へ `className` や `style` を公開せず、レイアウトpropsで指定すること。
 - 画面固有のgrid構造、リサイズ、独自breakpointを持つレスポンシブ配置は、
   汎用レイアウトのI/Fを広げず、責務を表す名前付きLayoutコンポーネントに
