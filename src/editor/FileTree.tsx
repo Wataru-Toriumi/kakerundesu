@@ -17,6 +17,7 @@ import { NewItemForm } from "@/components/editor/NewItemForm";
 import { NewItemInput } from "@/components/editor/NewItemInput";
 import { TreeFolder } from "@/components/editor/TreeFolder";
 import { TreeRow } from "@/components/editor/TreeRow";
+import type { LibraryCreation } from "@/hooks/useLibraryCreation";
 import type { TreeNode } from "@/lib/markdownLibrary";
 
 type FileTreeProps = {
@@ -26,18 +27,7 @@ type FileTreeProps = {
   activePath: string | null;
   onToggleFolder: (key: string) => void;
   onOpenFile: (path: string) => void;
-  creatingFolder: string | null;
-  newFileName: string;
-  onStartCreate: (relativeFolder: string) => void;
-  onChangeNewFileName: (name: string) => void;
-  onSubmitNewFile: (relativeFolder: string) => void;
-  onCancelCreate: () => void;
-  creatingDirectory: string | null;
-  newDirectoryName: string;
-  onStartCreateDirectory: (relativeParent: string) => void;
-  onChangeNewDirectoryName: (name: string) => void;
-  onSubmitNewDirectory: (relativeParent: string) => void;
-  onCancelCreateDirectory: () => void;
+  creation: LibraryCreation;
 };
 
 export function FileTree({
@@ -47,18 +37,7 @@ export function FileTree({
   activePath,
   onToggleFolder,
   onOpenFile,
-  creatingFolder,
-  newFileName,
-  onStartCreate,
-  onChangeNewFileName,
-  onSubmitNewFile,
-  onCancelCreate,
-  creatingDirectory,
-  newDirectoryName,
-  onStartCreateDirectory,
-  onChangeNewDirectoryName,
-  onSubmitNewDirectory,
-  onCancelCreateDirectory,
+  creation,
 }: FileTreeProps) {
   return nodes.map((node) => {
     if (node.type === "folder") {
@@ -72,36 +51,36 @@ export function FileTree({
               <span>{node.name}</span>
             </TreeRow>
             <FolderActions>
-              <FolderAction onClick={() => onStartCreate(node.key)} label={`${node.name}に新規ファイルを作成`} title="新規ファイル"><Plus /></FolderAction>
-              <FolderAction onClick={() => onStartCreateDirectory(node.key)} label={`${node.name}に新規フォルダを作成`} title="新規フォルダ"><FolderPlus /></FolderAction>
+              <FolderAction onClick={() => creation.startCreatingFile(node.key)} label={`${node.name}に新規ファイルを作成`} title="新規ファイル"><Plus /></FolderAction>
+              <FolderAction onClick={() => creation.startCreatingDirectory(node.key)} label={`${node.name}に新規フォルダを作成`} title="新規フォルダ"><FolderPlus /></FolderAction>
             </FolderActions>
           </FolderLine>
-          {creatingFolder === node.key && (
-            <NewItemForm depth={depth} onSubmit={() => onSubmitNewFile(node.key)}>
+          {creation.creatingFolder === node.key && (
+            <NewItemForm depth={depth} onSubmit={() => creation.createFile(node.key)}>
               <FileText />
               <NewItemInput
                 autoFocus
-                value={newFileName}
-                onChange={(event) => onChangeNewFileName(event.target.value)}
-                onKeyDown={(event) => { if (event.key === "Escape") onCancelCreate(); }}
+                value={creation.newFileName}
+                onChange={(event) => creation.setNewFileName(event.target.value)}
+                onKeyDown={(event) => { if (event.key === "Escape") creation.cancelCreatingFile(); }}
                 aria-label="新しいファイル名"
               />
               <NewItemAction type="submit" label="作成"><Check /></NewItemAction>
-              <NewItemAction type="button" onClick={onCancelCreate} label="キャンセル"><X /></NewItemAction>
+              <NewItemAction type="button" onClick={creation.cancelCreatingFile} label="キャンセル"><X /></NewItemAction>
             </NewItemForm>
           )}
-          {creatingDirectory === node.key && (
-            <NewItemForm depth={depth} onSubmit={() => onSubmitNewDirectory(node.key)}>
+          {creation.creatingDirectory === node.key && (
+            <NewItemForm depth={depth} onSubmit={() => creation.createDirectory(node.key)}>
               <Folder />
               <NewItemInput
                 autoFocus
-                value={newDirectoryName}
-                onChange={(event) => onChangeNewDirectoryName(event.target.value)}
-                onKeyDown={(event) => { if (event.key === "Escape") onCancelCreateDirectory(); }}
+                value={creation.newDirectoryName}
+                onChange={(event) => creation.setNewDirectoryName(event.target.value)}
+                onKeyDown={(event) => { if (event.key === "Escape") creation.cancelCreatingDirectory(); }}
                 aria-label="新しいフォルダ名"
               />
               <NewItemAction type="submit" label="作成"><Check /></NewItemAction>
-              <NewItemAction type="button" onClick={onCancelCreateDirectory} label="キャンセル"><X /></NewItemAction>
+              <NewItemAction type="button" onClick={creation.cancelCreatingDirectory} label="キャンセル"><X /></NewItemAction>
             </NewItemForm>
           )}
           {!collapsed && (
@@ -112,18 +91,7 @@ export function FileTree({
               activePath={activePath}
               onToggleFolder={onToggleFolder}
               onOpenFile={onOpenFile}
-              creatingFolder={creatingFolder}
-              newFileName={newFileName}
-              onStartCreate={onStartCreate}
-              onChangeNewFileName={onChangeNewFileName}
-              onSubmitNewFile={onSubmitNewFile}
-              onCancelCreate={onCancelCreate}
-              creatingDirectory={creatingDirectory}
-              newDirectoryName={newDirectoryName}
-              onStartCreateDirectory={onStartCreateDirectory}
-              onChangeNewDirectoryName={onChangeNewDirectoryName}
-              onSubmitNewDirectory={onSubmitNewDirectory}
-              onCancelCreateDirectory={onCancelCreateDirectory}
+              creation={creation}
             />
           )}
         </TreeFolder>
