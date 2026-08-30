@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
+import { fileName } from "@/lib/path";
 import {
   buildFileTree,
   type LibraryFolder,
   type MarkdownFile,
-} from "@/editor/FileTree";
-import { fileName } from "@/lib/path";
+} from "@/lib/markdownLibrary";
 
 type LibraryListing = { files: MarkdownFile[]; folders: LibraryFolder[] };
 

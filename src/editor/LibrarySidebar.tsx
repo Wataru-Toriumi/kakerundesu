@@ -6,7 +6,8 @@ import { LibraryFolder } from "@/components/editor/LibraryFolder";
 import { LibraryLayout } from "@/components/editor/LibraryLayout";
 import { PaneTitle } from "@/components/editor/PaneTitle";
 import { TruncatedText } from "@/components/editor/TruncatedText";
-import { FileTree, type TreeNode } from "@/editor/FileTree";
+import { FileTree } from "@/editor/FileTree";
+import type { TreeNode } from "@/lib/markdownLibrary";
 
 export type LibrarySidebarProps = {
   nodes: TreeNode[];
