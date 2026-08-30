@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["import", "react", "jsx-a11y"],
+  "plugins": ["import", "react", "jsx-a11y", "vitest"],
   "env": {
     "browser": true,
     "es2022": true

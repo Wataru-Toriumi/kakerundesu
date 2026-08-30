@@ -24,8 +24,10 @@ Node.js、pnpm、Rustのバージョンは `.mise.toml` で固定しています
 mise run check
 ```
 
-フロントエンドだけを検証する場合は `pnpm check`、Oxlintだけを実行する場合は
-`pnpm lint`を使用します。自動修正可能なlint違反には`pnpm lint:fix`を使用できます。
+フロントエンドだけを検証する場合は `pnpm check`、テストだけを実行する場合は
+`pnpm test`を使用します。開発中にテストを監視する場合は`pnpm test:watch`、
+Oxlintだけを実行する場合は`pnpm lint`を使用します。自動修正可能なlint違反には
+`pnpm lint:fix`を使用できます。
 
 ## UIコンポーネント
 
