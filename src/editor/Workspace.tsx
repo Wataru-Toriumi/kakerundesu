@@ -2,6 +2,7 @@ import { WorkspaceLayout } from "@/components/editor/WorkspaceLayout";
 import { EditorPane } from "@/editor/EditorPane";
 import { LibrarySidebar } from "@/editor/LibrarySidebar";
 import { PreviewPane } from "@/editor/PreviewPane";
+import type { LibraryCreation } from "@/hooks/useLibraryCreation";
 import type { MarkdownLibrary } from "@/hooks/useMarkdownLibrary";
 
 type WorkspaceProps = {
@@ -11,6 +12,7 @@ type WorkspaceProps = {
   activePath: string | null;
   onOpenFile: (path: string) => void;
   library: MarkdownLibrary;
+  libraryCreation: LibraryCreation;
 };
 
 export function Workspace({
@@ -20,6 +22,7 @@ export function Workspace({
   activePath,
   onOpenFile,
   library,
+  libraryCreation,
 }: WorkspaceProps) {
   return (
     <WorkspaceLayout>
@@ -33,18 +36,18 @@ export function Workspace({
         activePath={activePath}
         onToggleFolder={library.toggleFolder}
         onOpenFile={onOpenFile}
-        creatingFolder={library.creatingFolder}
-        newFileName={library.newFileName}
-        onStartCreate={library.startCreatingFile}
-        onChangeNewFileName={library.setNewFileName}
-        onSubmitNewFile={library.createFile}
-        onCancelCreate={library.cancelCreatingFile}
-        creatingDirectory={library.creatingDirectory}
-        newDirectoryName={library.newDirectoryName}
-        onStartCreateDirectory={library.startCreatingDirectory}
-        onChangeNewDirectoryName={library.setNewDirectoryName}
-        onSubmitNewDirectory={library.createDirectory}
-        onCancelCreateDirectory={library.cancelCreatingDirectory}
+        creatingFolder={libraryCreation.creatingFolder}
+        newFileName={libraryCreation.newFileName}
+        onStartCreate={libraryCreation.startCreatingFile}
+        onChangeNewFileName={libraryCreation.setNewFileName}
+        onSubmitNewFile={libraryCreation.createFile}
+        onCancelCreate={libraryCreation.cancelCreatingFile}
+        creatingDirectory={libraryCreation.creatingDirectory}
+        newDirectoryName={libraryCreation.newDirectoryName}
+        onStartCreateDirectory={libraryCreation.startCreatingDirectory}
+        onChangeNewDirectoryName={libraryCreation.setNewDirectoryName}
+        onSubmitNewDirectory={libraryCreation.createDirectory}
+        onCancelCreateDirectory={libraryCreation.cancelCreatingDirectory}
         onChooseFolder={library.chooseFolder}
       />
       <EditorPane content={content} theme={theme} onChange={onChangeContent} />
