@@ -16,11 +16,34 @@ const initialMarkdown = `# かけるんです
 > 「開く」から既存の.mdファイルも編集できます。
 `;
 
+type DocumentState = {
+  content: string;
+  savedContent: string;
+  filePath: string | null;
+};
+
+const initialDocument: DocumentState = {
+  content: initialMarkdown,
+  savedContent: initialMarkdown,
+  filePath: null,
+};
+
 export function useMarkdownDocument(onMessage: (message: string) => void) {
-  const [content, setContent] = useState(initialMarkdown);
-  const [savedContent, setSavedContent] = useState(initialMarkdown);
-  const [filePath, setFilePath] = useState<string | null>(null);
+  const [document, setDocument] = useState(initialDocument);
+  const { content, savedContent, filePath } = document;
   const isDirty = content !== savedContent;
+
+  const setContent = useCallback((nextContent: string) => {
+    setDocument((current) => ({ ...current, content: nextContent }));
+  }, []);
+
+  const replaceDocument = useCallback((nextContent: string, nextFilePath: string | null) => {
+    setDocument({
+      content: nextContent,
+      savedContent: nextContent,
+      filePath: nextFilePath,
+    });
+  }, []);
 
   const confirmDiscard = useCallback(() => (
     !isDirty || window.confirm("保存されていない変更を破棄しますか？")
@@ -28,24 +51,20 @@ export function useMarkdownDocument(onMessage: (message: string) => void) {
 
   const newDocument = useCallback(() => {
     if (!confirmDiscard()) return;
-    setContent("");
-    setSavedContent("");
-    setFilePath(null);
+    replaceDocument("", null);
     onMessage("新しい文書を作成しました");
-  }, [confirmDiscard, onMessage]);
+  }, [confirmDiscard, onMessage, replaceDocument]);
 
   const loadDocument = useCallback(async (path: string) => {
     if (!confirmDiscard()) return;
     try {
       const text = await readMarkdownFile(path);
-      setContent(text);
-      setSavedContent(text);
-      setFilePath(path);
+      replaceDocument(text, path);
       onMessage(`${fileName(path)} を開きました`);
     } catch (error) {
       onMessage(`開けませんでした: ${String(error)}`);
     }
-  }, [confirmDiscard, onMessage]);
+  }, [confirmDiscard, onMessage, replaceDocument]);
 
   const openDocument = useCallback(async () => {
     try {
@@ -70,8 +89,11 @@ export function useMarkdownDocument(onMessage: (message: string) => void) {
       }
       if (!destination) return;
       await writeMarkdownFile({ path: destination, content });
-      setFilePath(destination);
-      setSavedContent(content);
+      setDocument((current) => ({
+        ...current,
+        savedContent: content,
+        filePath: destination,
+      }));
       onMessage(`${fileName(destination)} を保存しました`);
     } catch (error) {
       onMessage(`保存できませんでした: ${String(error)}`);
@@ -79,11 +101,9 @@ export function useMarkdownDocument(onMessage: (message: string) => void) {
   }, [content, filePath, onMessage]);
 
   const createDocumentAtPath = useCallback((path: string) => {
-    setContent("");
-    setSavedContent("");
-    setFilePath(path);
+    replaceDocument("", path);
     onMessage(`${fileName(path)} を作成しました`);
-  }, [onMessage]);
+  }, [onMessage, replaceDocument]);
 
   useEffect(() => {
     const preventClose = (event: BeforeUnloadEvent) => {
