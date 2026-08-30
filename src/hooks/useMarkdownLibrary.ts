@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import {
-  createFolder,
-  createMarkdownFile,
   listenToLibraryChanges,
   listMarkdownFiles,
   watchMarkdownFolder,
@@ -15,12 +13,10 @@ import {
 import { fileName } from "@/lib/path";
 
 type MarkdownLibraryOptions = {
-  confirmDiscard: () => boolean;
-  onCreateFile: (path: string) => void;
   onMessage: (message: string) => void;
 };
 
-export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: MarkdownLibraryOptions) {
+export function useMarkdownLibrary({ onMessage }: MarkdownLibraryOptions) {
   const [libraryFolder, setLibraryFolder] = useState<string | null>(() =>
     localStorage.getItem("kakerundesu-library-folder"),
   );
@@ -28,10 +24,6 @@ export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: 
   const [libraryFolders, setLibraryFolders] = useState<LibraryFolder[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [collapsedFolders, setCollapsedFolders] = useState<Set<string>>(() => new Set());
-  const [creatingFolder, setCreatingFolder] = useState<string | null>(null);
-  const [newFileName, setNewFileName] = useState("無題.md");
-  const [creatingDirectory, setCreatingDirectory] = useState<string | null>(null);
-  const [newDirectoryName, setNewDirectoryName] = useState("新しいフォルダ");
   const activeLibraryFolder = useRef(libraryFolder);
   const latestRefreshId = useRef(0);
 
@@ -89,55 +81,6 @@ export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: 
     }
   }, [libraryFolder, onMessage]);
 
-  const startCreatingFile = useCallback((relativeFolder: string) => {
-    if (!libraryFolder || !confirmDiscard()) return;
-    expandFolder(relativeFolder);
-    setNewFileName("無題.md");
-    setCreatingDirectory(null);
-    setCreatingFolder(relativeFolder);
-  }, [confirmDiscard, expandFolder, libraryFolder]);
-
-  const createFile = useCallback(async (relativeFolder: string) => {
-    if (!libraryFolder || !newFileName.trim()) return;
-    try {
-      const path = await createMarkdownFile({
-        root: libraryFolder,
-        relativeFolder,
-        fileName: newFileName,
-      });
-      onCreateFile(path);
-      setCreatingFolder(null);
-      expandFolder(relativeFolder);
-      await refreshLibrary(libraryFolder);
-    } catch (error) {
-      onMessage(`ファイルを作成できませんでした: ${String(error)}`);
-    }
-  }, [expandFolder, libraryFolder, newFileName, onCreateFile, onMessage, refreshLibrary]);
-
-  const startCreatingDirectory = useCallback((relativeParent: string) => {
-    if (!libraryFolder) return;
-    expandFolder(relativeParent);
-    setNewDirectoryName("新しいフォルダ");
-    setCreatingFolder(null);
-    setCreatingDirectory(relativeParent);
-  }, [expandFolder, libraryFolder]);
-
-  const createDirectory = useCallback(async (relativeParent: string) => {
-    if (!libraryFolder || !newDirectoryName.trim()) return;
-    try {
-      await createFolder({
-        root: libraryFolder,
-        relativeParent,
-        folderName: newDirectoryName,
-      });
-      setCreatingDirectory(null);
-      onMessage(`${newDirectoryName.trim()} を作成しました`);
-      await refreshLibrary(libraryFolder);
-    } catch (error) {
-      onMessage(`フォルダを作成できませんでした: ${String(error)}`);
-    }
-  }, [libraryFolder, newDirectoryName, onMessage, refreshLibrary]);
-
   const toggleFolder = useCallback((key: string) => {
     setCollapsedFolders((current) => {
       const next = new Set(current);
@@ -182,6 +125,11 @@ export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: 
     [libraryFiles, libraryFolders],
   );
 
+  const refreshCurrentLibrary = useCallback(
+    () => refreshLibrary(libraryFolder),
+    [libraryFolder, refreshLibrary],
+  );
+
   return {
     nodes,
     fileCount: libraryFiles.length,
@@ -190,18 +138,8 @@ export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: 
     libraryName: libraryFolder ? fileName(libraryFolder) : "フォルダ未設定",
     collapsedFolders,
     toggleFolder,
-    creatingFolder,
-    newFileName,
-    startCreatingFile,
-    setNewFileName,
-    createFile,
-    cancelCreatingFile: () => setCreatingFolder(null),
-    creatingDirectory,
-    newDirectoryName,
-    startCreatingDirectory,
-    setNewDirectoryName,
-    createDirectory,
-    cancelCreatingDirectory: () => setCreatingDirectory(null),
+    expandFolder,
+    refreshLibrary: refreshCurrentLibrary,
     chooseFolder,
   };
 }

@@ -8,8 +8,6 @@ import type { LibraryListing } from "@/lib/markdownClient";
 
 const mocks = vi.hoisted(() => ({
   open: vi.fn<() => Promise<string | null>>(),
-  createFolder: vi.fn<() => Promise<void>>(),
-  createMarkdownFile: vi.fn<() => Promise<string>>(),
   listenToLibraryChanges: vi.fn<() => Promise<() => void>>(),
   listMarkdownFiles: vi.fn<(folder: string) => Promise<LibraryListing>>(),
   watchMarkdownFolder: vi.fn<() => Promise<void>>(),
@@ -17,8 +15,6 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: mocks.open }));
 vi.mock("@/lib/markdownClient", () => ({
-  createFolder: mocks.createFolder,
-  createMarkdownFile: mocks.createMarkdownFile,
   listenToLibraryChanges: mocks.listenToLibraryChanges,
   listMarkdownFiles: mocks.listMarkdownFiles,
   watchMarkdownFolder: mocks.watchMarkdownFolder,
@@ -44,8 +40,6 @@ type HarnessProps = {
 
 function LibraryHarness({ onMessage, onUpdate }: HarnessProps) {
   const library = useMarkdownLibrary({
-    confirmDiscard: () => true,
-    onCreateFile: () => undefined,
     onMessage,
   });
 
