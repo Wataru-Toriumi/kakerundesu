@@ -7,88 +7,50 @@ import { LibraryLayout } from "@/components/editor/LibraryLayout";
 import { PaneTitle } from "@/components/editor/PaneTitle";
 import { TruncatedText } from "@/components/editor/TruncatedText";
 import { FileTree } from "@/editor/FileTree";
-import type { TreeNode } from "@/lib/markdownLibrary";
+import type { LibraryCreation } from "@/hooks/useLibraryCreation";
+import type { MarkdownLibrary } from "@/hooks/useMarkdownLibrary";
 
 export type LibrarySidebarProps = {
-  nodes: TreeNode[];
-  fileCount: number;
-  isLoading: boolean;
-  libraryFolder: string | null;
-  libraryName: string;
-  collapsedFolders: Set<string>;
+  library: MarkdownLibrary;
+  creation: LibraryCreation;
   activePath: string | null;
-  onToggleFolder: (key: string) => void;
   onOpenFile: (path: string) => void;
-  creatingFolder: string | null;
-  newFileName: string;
-  onStartCreate: (relativeFolder: string) => void;
-  onChangeNewFileName: (name: string) => void;
-  onSubmitNewFile: (relativeFolder: string) => void;
-  onCancelCreate: () => void;
-  creatingDirectory: string | null;
-  newDirectoryName: string;
-  onStartCreateDirectory: (relativeParent: string) => void;
-  onChangeNewDirectoryName: (name: string) => void;
-  onSubmitNewDirectory: (relativeParent: string) => void;
-  onCancelCreateDirectory: () => void;
-  onChooseFolder: () => void;
 };
 
 export function LibrarySidebar({
-  nodes,
-  fileCount,
-  isLoading,
-  libraryFolder,
-  libraryName,
-  collapsedFolders,
+  library,
+  creation,
   activePath,
-  onToggleFolder,
   onOpenFile,
-  creatingFolder,
-  newFileName,
-  onStartCreate,
-  onChangeNewFileName,
-  onSubmitNewFile,
-  onCancelCreate,
-  creatingDirectory,
-  newDirectoryName,
-  onStartCreateDirectory,
-  onChangeNewDirectoryName,
-  onSubmitNewDirectory,
-  onCancelCreateDirectory,
-  onChooseFolder,
 }: LibrarySidebarProps) {
   return (
     <LibraryLayout>
-      <PaneTitle title="FILES" meta={isLoading ? "読み込み中" : `${fileCount}件`} library />
-      <LibraryFolder title={libraryFolder ?? "フォルダ未設定"}>
+      <PaneTitle
+        title="FILES"
+        meta={library.isLoading ? "読み込み中" : `${library.fileCount}件`}
+        library
+      />
+      <LibraryFolder title={library.libraryFolder ?? "フォルダ未設定"}>
         <FolderOpen />
-        <TruncatedText>{libraryName}</TruncatedText>
+        <TruncatedText>{library.libraryName}</TruncatedText>
       </LibraryFolder>
       <FileList>
         <FileTree
-          nodes={nodes}
-          collapsedFolders={collapsedFolders}
+          nodes={library.nodes}
+          collapsedFolders={library.collapsedFolders}
           activePath={activePath}
-          onToggleFolder={onToggleFolder}
+          onToggleFolder={library.toggleFolder}
           onOpenFile={onOpenFile}
-          creatingFolder={creatingFolder}
-          newFileName={newFileName}
-          onStartCreate={onStartCreate}
-          onChangeNewFileName={onChangeNewFileName}
-          onSubmitNewFile={onSubmitNewFile}
-          onCancelCreate={onCancelCreate}
-          creatingDirectory={creatingDirectory}
-          newDirectoryName={newDirectoryName}
-          onStartCreateDirectory={onStartCreateDirectory}
-          onChangeNewDirectoryName={onChangeNewDirectoryName}
-          onSubmitNewDirectory={onSubmitNewDirectory}
-          onCancelCreateDirectory={onCancelCreateDirectory}
+          creation={creation}
         />
-        {libraryFolder && !isLoading && nodes.length === 0 && <EmptyLibrary>フォルダは空です</EmptyLibrary>}
-        {!libraryFolder && <EmptyLibrary>表示するフォルダを設定してください</EmptyLibrary>}
+        {library.libraryFolder && !library.isLoading && library.nodes.length === 0 && (
+          <EmptyLibrary>フォルダは空です</EmptyLibrary>
+        )}
+        {!library.libraryFolder && (
+          <EmptyLibrary>表示するフォルダを設定してください</EmptyLibrary>
+        )}
       </FileList>
-      <ChooseFolderButton onClick={onChooseFolder}>
+      <ChooseFolderButton onClick={library.chooseFolder}>
         <FolderCog />フォルダを設定
       </ChooseFolderButton>
     </LibraryLayout>
