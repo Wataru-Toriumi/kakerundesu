@@ -1,22 +1,18 @@
 import {
-  Check,
   ChevronRight,
   FileText,
   Folder,
   FolderOpen,
   FolderPlus,
   Plus,
-  X,
 } from "lucide-react";
 import { FolderAction } from "@/components/editor/FolderAction";
 import { FolderActions } from "@/components/editor/FolderActions";
 import { FolderChevron } from "@/components/editor/FolderChevron";
 import { FolderLine } from "@/components/editor/FolderLine";
-import { NewItemAction } from "@/components/editor/NewItemAction";
-import { NewItemForm } from "@/components/editor/NewItemForm";
-import { NewItemInput } from "@/components/editor/NewItemInput";
 import { TreeFolder } from "@/components/editor/TreeFolder";
 import { TreeRow } from "@/components/editor/TreeRow";
+import { LibraryItemCreationForm } from "@/editor/LibraryItemCreationForm";
 import type { LibraryCreation } from "@/hooks/useLibraryCreation";
 import type { TreeNode } from "@/lib/markdownLibrary";
 
@@ -56,32 +52,24 @@ export function FileTree({
             </FolderActions>
           </FolderLine>
           {creation.creatingFolder === node.key && (
-            <NewItemForm depth={depth} onSubmit={() => creation.createFile(node.key)}>
-              <FileText />
-              <NewItemInput
-                autoFocus
-                value={creation.newFileName}
-                onChange={(event) => creation.setNewFileName(event.target.value)}
-                onKeyDown={(event) => { if (event.key === "Escape") creation.cancelCreatingFile(); }}
-                aria-label="新しいファイル名"
-              />
-              <NewItemAction type="submit" label="作成"><Check /></NewItemAction>
-              <NewItemAction type="button" onClick={creation.cancelCreatingFile} label="キャンセル"><X /></NewItemAction>
-            </NewItemForm>
+            <LibraryItemCreationForm
+              kind="file"
+              depth={depth}
+              name={creation.newFileName}
+              onChangeName={creation.setNewFileName}
+              onSubmit={() => creation.createFile(node.key)}
+              onCancel={creation.cancelCreatingFile}
+            />
           )}
           {creation.creatingDirectory === node.key && (
-            <NewItemForm depth={depth} onSubmit={() => creation.createDirectory(node.key)}>
-              <Folder />
-              <NewItemInput
-                autoFocus
-                value={creation.newDirectoryName}
-                onChange={(event) => creation.setNewDirectoryName(event.target.value)}
-                onKeyDown={(event) => { if (event.key === "Escape") creation.cancelCreatingDirectory(); }}
-                aria-label="新しいフォルダ名"
-              />
-              <NewItemAction type="submit" label="作成"><Check /></NewItemAction>
-              <NewItemAction type="button" onClick={creation.cancelCreatingDirectory} label="キャンセル"><X /></NewItemAction>
-            </NewItemForm>
+            <LibraryItemCreationForm
+              kind="directory"
+              depth={depth}
+              name={creation.newDirectoryName}
+              onChangeName={creation.setNewDirectoryName}
+              onSubmit={() => creation.createDirectory(node.key)}
+              onCancel={creation.cancelCreatingDirectory}
+            />
           )}
           {!collapsed && (
             <FileTree
