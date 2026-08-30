@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import {
   createFolder,
@@ -32,6 +32,8 @@ export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: 
   const [newFileName, setNewFileName] = useState("無題.md");
   const [creatingDirectory, setCreatingDirectory] = useState<string | null>(null);
   const [newDirectoryName, setNewDirectoryName] = useState("新しいフォルダ");
+  const activeLibraryFolder = useRef(libraryFolder);
+  const latestRefreshId = useRef(0);
 
   const expandFolder = useCallback((key: string) => {
     setCollapsedFolders((current) => {
@@ -41,27 +43,34 @@ export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: 
     });
   }, []);
 
-  const refreshLibrary = useCallback(async (folder = libraryFolder) => {
+  const refreshLibrary = useCallback(async (folder: string | null) => {
+    if (folder !== activeLibraryFolder.current) return;
+    const refreshId = ++latestRefreshId.current;
     if (!folder) {
       setLibraryFiles([]);
       setLibraryFolders([]);
+      setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
     try {
       const listing = await listMarkdownFiles(folder);
+      if (refreshId !== latestRefreshId.current || folder !== activeLibraryFolder.current) return;
       setLibraryFiles(listing.files);
       setLibraryFolders(listing.folders);
       onMessage(`${listing.files.length}件のMarkdownファイルを読み込みました`);
     } catch (error) {
+      if (refreshId !== latestRefreshId.current || folder !== activeLibraryFolder.current) return;
       setLibraryFiles([]);
       setLibraryFolders([]);
       onMessage(`フォルダを読み込めませんでした: ${String(error)}`);
     } finally {
-      setIsLoading(false);
+      if (refreshId === latestRefreshId.current && folder === activeLibraryFolder.current) {
+        setIsLoading(false);
+      }
     }
-  }, [libraryFolder, onMessage]);
+  }, [onMessage]);
 
   const chooseFolder = useCallback(async () => {
     try {
@@ -71,13 +80,14 @@ export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: 
         defaultPath: libraryFolder ?? undefined,
       });
       if (!selected) return;
+      activeLibraryFolder.current = selected;
+      latestRefreshId.current += 1;
       setLibraryFolder(selected);
       localStorage.setItem("kakerundesu-library-folder", selected);
-      await refreshLibrary(selected);
     } catch (error) {
       onMessage(`フォルダを設定できませんでした: ${String(error)}`);
     }
-  }, [libraryFolder, onMessage, refreshLibrary]);
+  }, [libraryFolder, onMessage]);
 
   const startCreatingFile = useCallback((relativeFolder: string) => {
     if (!libraryFolder || !confirmDiscard()) return;
@@ -98,7 +108,7 @@ export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: 
       onCreateFile(path);
       setCreatingFolder(null);
       expandFolder(relativeFolder);
-      await refreshLibrary();
+      await refreshLibrary(libraryFolder);
     } catch (error) {
       onMessage(`ファイルを作成できませんでした: ${String(error)}`);
     }
@@ -122,7 +132,7 @@ export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: 
       });
       setCreatingDirectory(null);
       onMessage(`${newDirectoryName.trim()} を作成しました`);
-      await refreshLibrary();
+      await refreshLibrary(libraryFolder);
     } catch (error) {
       onMessage(`フォルダを作成できませんでした: ${String(error)}`);
     }
@@ -138,8 +148,8 @@ export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: 
   }, []);
 
   useEffect(() => {
-    void refreshLibrary();
-  }, [refreshLibrary]);
+    void refreshLibrary(libraryFolder);
+  }, [libraryFolder, refreshLibrary]);
 
   useEffect(() => {
     if (!libraryFolder) return;
@@ -150,7 +160,7 @@ export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: 
 
     void listenToLibraryChanges(() => {
       clearTimeout(refreshTimer);
-      refreshTimer = setTimeout(() => void refreshLibrary(), 250);
+      refreshTimer = setTimeout(() => void refreshLibrary(libraryFolder), 250);
     }).then((unlisten) => {
       if (disposed) unlisten();
       else stopListening = unlisten;
