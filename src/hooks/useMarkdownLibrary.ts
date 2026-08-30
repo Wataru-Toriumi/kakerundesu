@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import {
-  listenToLibraryChanges,
-  listMarkdownFiles,
-  watchMarkdownFolder,
-} from "@/lib/markdownClient";
+import { useLibraryWatcher } from "@/hooks/useLibraryWatcher";
+import { listMarkdownFiles } from "@/lib/markdownClient";
 import {
   buildFileTree,
   type LibraryFolder,
@@ -90,44 +87,24 @@ export function useMarkdownLibrary({ onMessage }: MarkdownLibraryOptions) {
     });
   }, []);
 
-  useEffect(() => {
-    void refreshLibrary(libraryFolder);
-  }, [libraryFolder, refreshLibrary]);
+  const refreshCurrentLibrary = useCallback(
+    () => refreshLibrary(libraryFolder),
+    [libraryFolder, refreshLibrary],
+  );
 
   useEffect(() => {
-    if (!libraryFolder) return;
+    void refreshCurrentLibrary();
+  }, [refreshCurrentLibrary]);
 
-    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
-    let disposed = false;
-    let stopListening: (() => void) | undefined;
-
-    void listenToLibraryChanges(() => {
-      clearTimeout(refreshTimer);
-      refreshTimer = setTimeout(() => void refreshLibrary(libraryFolder), 250);
-    }).then((unlisten) => {
-      if (disposed) unlisten();
-      else stopListening = unlisten;
-    });
-
-    void watchMarkdownFolder(libraryFolder).catch((error) => {
-      onMessage(`フォルダを監視できませんでした: ${String(error)}`);
-    });
-
-    return () => {
-      disposed = true;
-      clearTimeout(refreshTimer);
-      stopListening?.();
-    };
-  }, [libraryFolder, onMessage, refreshLibrary]);
+  useLibraryWatcher({
+    libraryFolder,
+    onChange: refreshCurrentLibrary,
+    onMessage,
+  });
 
   const nodes = useMemo(
     () => buildFileTree(libraryFiles, libraryFolders),
     [libraryFiles, libraryFolders],
-  );
-
-  const refreshCurrentLibrary = useCallback(
-    () => refreshLibrary(libraryFolder),
-    [libraryFolder, refreshLibrary],
   );
 
   return {
