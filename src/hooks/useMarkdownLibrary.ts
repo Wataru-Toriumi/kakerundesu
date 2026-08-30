@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
-import { fileName } from "@/lib/path";
+import {
+  createFolder,
+  createMarkdownFile,
+  listenToLibraryChanges,
+  listMarkdownFiles,
+  watchMarkdownFolder,
+} from "@/lib/markdownClient";
 import {
   buildFileTree,
   type LibraryFolder,
   type MarkdownFile,
 } from "@/lib/markdownLibrary";
-
-type LibraryListing = { files: MarkdownFile[]; folders: LibraryFolder[] };
+import { fileName } from "@/lib/path";
 
 type MarkdownLibraryOptions = {
   confirmDiscard: () => boolean;
@@ -47,7 +50,7 @@ export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: 
 
     setIsLoading(true);
     try {
-      const listing = await invoke<LibraryListing>("list_markdown_files", { folder });
+      const listing = await listMarkdownFiles(folder);
       setLibraryFiles(listing.files);
       setLibraryFolders(listing.folders);
       onMessage(`${listing.files.length}件のMarkdownファイルを読み込みました`);
@@ -87,7 +90,7 @@ export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: 
   const createFile = useCallback(async (relativeFolder: string) => {
     if (!libraryFolder || !newFileName.trim()) return;
     try {
-      const path = await invoke<string>("create_markdown_file", {
+      const path = await createMarkdownFile({
         root: libraryFolder,
         relativeFolder,
         fileName: newFileName,
@@ -112,7 +115,7 @@ export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: 
   const createDirectory = useCallback(async (relativeParent: string) => {
     if (!libraryFolder || !newDirectoryName.trim()) return;
     try {
-      await invoke("create_folder", {
+      await createFolder({
         root: libraryFolder,
         relativeParent,
         folderName: newDirectoryName,
@@ -145,7 +148,7 @@ export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: 
     let disposed = false;
     let stopListening: (() => void) | undefined;
 
-    void listen("library-changed", () => {
+    void listenToLibraryChanges(() => {
       clearTimeout(refreshTimer);
       refreshTimer = setTimeout(() => void refreshLibrary(), 250);
     }).then((unlisten) => {
@@ -153,7 +156,7 @@ export function useMarkdownLibrary({ confirmDiscard, onCreateFile, onMessage }: 
       else stopListening = unlisten;
     });
 
-    void invoke("watch_markdown_folder", { folder: libraryFolder }).catch((error) => {
+    void watchMarkdownFolder(libraryFolder).catch((error) => {
       onMessage(`フォルダを監視できませんでした: ${String(error)}`);
     });
 

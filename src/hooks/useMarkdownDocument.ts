@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
+import { readMarkdownFile, writeMarkdownFile } from "@/lib/markdownClient";
 import { fileName } from "@/lib/path";
 
 const initialMarkdown = `# かけるんです
@@ -37,7 +37,7 @@ export function useMarkdownDocument(onMessage: (message: string) => void) {
   const loadDocument = useCallback(async (path: string) => {
     if (!confirmDiscard()) return;
     try {
-      const text = await invoke<string>("read_markdown_file", { path });
+      const text = await readMarkdownFile(path);
       setContent(text);
       setSavedContent(text);
       setFilePath(path);
@@ -69,7 +69,7 @@ export function useMarkdownDocument(onMessage: (message: string) => void) {
         });
       }
       if (!destination) return;
-      await invoke("write_markdown_file", { path: destination, content });
+      await writeMarkdownFile({ path: destination, content });
       setFilePath(destination);
       setSavedContent(content);
       onMessage(`${fileName(destination)} を保存しました`);
