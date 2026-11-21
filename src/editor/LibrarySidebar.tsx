@@ -1,7 +1,8 @@
-import { FolderCog, FolderOpen } from "lucide-react";
+import { FolderOpen } from "lucide-react";
 import { ChooseFolderButton } from "@/components/editor/ChooseFolderButton";
 import { EmptyLibrary } from "@/components/editor/EmptyLibrary";
 import { FileList } from "@/components/editor/FileList";
+import { FolderAction } from "@/components/editor/FolderAction";
 import { LibraryFolder } from "@/components/editor/LibraryFolder";
 import { LibraryLayout } from "@/components/editor/LibraryLayout";
 import { PaneTitle } from "@/components/editor/PaneTitle";
@@ -30,9 +31,19 @@ export function LibrarySidebar({
         meta={library.isLoading ? "読み込み中" : `${library.fileCount}件`}
         library
       />
-      <LibraryFolder title={library.libraryFolder ?? "フォルダ未設定"}>
-        <FolderOpen />
-        <TruncatedText>{library.libraryName}</TruncatedText>
+      <LibraryFolder title={library.libraryFolder ?? undefined}>
+        {library.libraryFolder ? (
+          <>
+            <TruncatedText>{library.libraryName}</TruncatedText>
+            <FolderAction label="フォルダを切り替える…" title="フォルダを切り替える…" onClick={library.chooseFolder}>
+              <FolderOpen />
+            </FolderAction>
+          </>
+        ) : (
+          <ChooseFolderButton onClick={library.chooseFolder}>
+            <FolderOpen /><TruncatedText>フォルダを開く…</TruncatedText>
+          </ChooseFolderButton>
+        )}
       </LibraryFolder>
       <FileList>
         <FileTree
@@ -46,13 +57,7 @@ export function LibrarySidebar({
         {library.libraryFolder && !library.isLoading && library.nodes.length === 0 && (
           <EmptyLibrary>フォルダは空です</EmptyLibrary>
         )}
-        {!library.libraryFolder && (
-          <EmptyLibrary>表示するフォルダを設定してください</EmptyLibrary>
-        )}
       </FileList>
-      <ChooseFolderButton onClick={library.chooseFolder}>
-        <FolderCog />フォルダを設定
-      </ChooseFolderButton>
     </LibraryLayout>
   );
 }

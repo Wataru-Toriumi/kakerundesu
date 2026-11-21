@@ -7,7 +7,7 @@ import { useEditorShortcuts } from "@/hooks/useEditorShortcuts";
 import { useLibraryCreation } from "@/hooks/useLibraryCreation";
 import { useMarkdownDocument } from "@/hooks/useMarkdownDocument";
 import { useMarkdownLibrary } from "@/hooks/useMarkdownLibrary";
-import { useSettingsDialog } from "@/hooks/useSettingsDialog";
+import { useAppMenu } from "@/hooks/useAppMenu";
 import { useTheme } from "@/hooks/useTheme";
 import { useViewMode } from "@/hooks/useViewMode";
 import { SettingsDialog } from "@/settings/SettingsDialog";
@@ -27,11 +27,18 @@ function App() {
     onRefreshLibrary: library.refreshLibrary,
   });
   const { theme, setTheme } = useTheme();
-  const settings = useSettingsDialog(setMessage);
+  const [isSettingsOpen, setSettingsOpen] = useState(false);
+  useAppMenu({
+    onOpenSettings: () => setSettingsOpen(true),
+    onOpenDocument: () => {
+      if (!isSettingsOpen) void documentState.openDocument();
+    },
+    onMessage: setMessage,
+  });
   const { viewMode, setViewMode } = useViewMode();
 
   useEditorShortcuts({
-    enabled: !settings.isOpen,
+    enabled: !isSettingsOpen,
     onNewDocument: documentState.newDocument,
     onOpenDocument: documentState.openDocument,
     onSaveDocument: documentState.saveDocument,
@@ -45,9 +52,8 @@ function App() {
         viewMode={viewMode}
         onChangeViewMode={setViewMode}
         onNewDocument={documentState.newDocument}
-        onOpenDocument={documentState.openDocument}
         onSaveDocument={documentState.saveDocument}
-        onOpenSettings={() => settings.setOpen(true)}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
       <Workspace
         viewMode={viewMode}
@@ -60,8 +66,8 @@ function App() {
         libraryCreation={libraryCreation}
       />
       <SettingsDialog
-        open={settings.isOpen}
-        onOpenChange={settings.setOpen}
+        open={isSettingsOpen}
+        onOpenChange={setSettingsOpen}
         theme={theme}
         onThemeChange={setTheme}
       />

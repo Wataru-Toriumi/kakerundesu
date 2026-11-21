@@ -1,7 +1,7 @@
+#[cfg(desktop)]
+mod app_menu;
 mod folder_watcher;
 mod markdown_library;
-#[cfg(target_os = "macos")]
-mod settings_menu;
 
 use folder_watcher::{watch_markdown_folder, FolderWatcher};
 use markdown_library::{
@@ -12,10 +12,10 @@ use markdown_library::{
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default();
-    #[cfg(target_os = "macos")]
+    #[cfg(desktop)]
     let builder = builder
-        .menu(settings_menu::build)
-        .on_menu_event(settings_menu::handle);
+        .menu(app_menu::build)
+        .on_menu_event(app_menu::handle);
 
     builder
         .manage(FolderWatcher::default())
