@@ -2,6 +2,8 @@
 
 Tauri 2、React、TypeScriptで作ったデスクトップMarkdownエディタです。
 
+画面の使い方、文書の保存条件、ファイル一覧に表示される項目は[外部仕様](docs/spec/README.md)にまとめています。
+
 ## 開発
 
 ```bash
