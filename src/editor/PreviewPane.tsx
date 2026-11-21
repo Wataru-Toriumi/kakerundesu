@@ -36,7 +36,7 @@ const components = {
 export function PreviewPane({ content, theme }: PreviewPaneProps) {
   return (
     <Pane kind="preview">
-      <PaneTitle title="PREVIEW" meta="GFM · Mermaid" />
+      <PaneTitle title="PREVIEW" />
       <MarkdownBody>
         <ReactMarkdown components={components[theme]} remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
       </MarkdownBody>
