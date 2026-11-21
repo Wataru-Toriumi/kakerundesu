@@ -1,13 +1,15 @@
 import { useEffect } from "react";
 
 type EditorShortcuts = {
+  enabled: boolean;
   onNewDocument: () => void;
   onOpenDocument: () => void | Promise<void>;
   onSaveDocument: () => void | Promise<void>;
 };
 
-export function useEditorShortcuts({ onNewDocument, onOpenDocument, onSaveDocument }: EditorShortcuts) {
+export function useEditorShortcuts({ enabled, onNewDocument, onOpenDocument, onSaveDocument }: EditorShortcuts) {
   useEffect(() => {
+    if (!enabled) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (!event.metaKey && !event.ctrlKey) return;
 
@@ -26,5 +28,5 @@ export function useEditorShortcuts({ onNewDocument, onOpenDocument, onSaveDocume
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onNewDocument, onOpenDocument, onSaveDocument]);
+  }, [enabled, onNewDocument, onOpenDocument, onSaveDocument]);
 }

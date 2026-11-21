@@ -7,8 +7,10 @@ import { useEditorShortcuts } from "@/hooks/useEditorShortcuts";
 import { useLibraryCreation } from "@/hooks/useLibraryCreation";
 import { useMarkdownDocument } from "@/hooks/useMarkdownDocument";
 import { useMarkdownLibrary } from "@/hooks/useMarkdownLibrary";
+import { useSettingsDialog } from "@/hooks/useSettingsDialog";
 import { useTheme } from "@/hooks/useTheme";
 import { useViewMode } from "@/hooks/useViewMode";
+import { SettingsDialog } from "@/settings/SettingsDialog";
 
 function App() {
   const [message, setMessage] = useState("新しい文書");
@@ -24,10 +26,12 @@ function App() {
     onMessage: setMessage,
     onRefreshLibrary: library.refreshLibrary,
   });
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const settings = useSettingsDialog(setMessage);
   const { viewMode, setViewMode } = useViewMode();
 
   useEditorShortcuts({
+    enabled: !settings.isOpen,
     onNewDocument: documentState.newDocument,
     onOpenDocument: documentState.openDocument,
     onSaveDocument: documentState.saveDocument,
@@ -38,13 +42,12 @@ function App() {
       <Header
         fileName={documentState.currentFileName}
         isDirty={documentState.isDirty}
-        theme={theme}
         viewMode={viewMode}
         onChangeViewMode={setViewMode}
         onNewDocument={documentState.newDocument}
         onOpenDocument={documentState.openDocument}
         onSaveDocument={documentState.saveDocument}
-        onToggleTheme={toggleTheme}
+        onOpenSettings={() => settings.setOpen(true)}
       />
       <Workspace
         viewMode={viewMode}
@@ -55,6 +58,12 @@ function App() {
         onOpenFile={documentState.loadDocument}
         library={library}
         libraryCreation={libraryCreation}
+      />
+      <SettingsDialog
+        open={settings.isOpen}
+        onOpenChange={settings.setOpen}
+        theme={theme}
+        onThemeChange={setTheme}
       />
       <Footer isDirty={documentState.isDirty} message={message} />
     </AppShell>
