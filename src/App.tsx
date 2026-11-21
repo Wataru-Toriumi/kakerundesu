@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { AppShell } from "@/components/app/AppShell";
-import { SettingsDialog } from "@/components/app/SettingsDialog";
 import { Footer } from "@/Footer";
 import { Header } from "@/Header";
 import { Workspace } from "@/editor/Workspace";
@@ -11,6 +10,7 @@ import { useMarkdownLibrary } from "@/hooks/useMarkdownLibrary";
 import { useSettingsDialog } from "@/hooks/useSettingsDialog";
 import { useTheme } from "@/hooks/useTheme";
 import { useViewMode } from "@/hooks/useViewMode";
+import { SettingsDialog } from "@/settings/SettingsDialog";
 
 function App() {
   const [message, setMessage] = useState("新しい文書");
