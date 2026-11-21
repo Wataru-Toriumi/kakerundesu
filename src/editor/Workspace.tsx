@@ -35,7 +35,7 @@ export function Workspace({
         />
       }
       editor={<EditorPane content={content} theme={theme} onChange={onChangeContent} />}
-      preview={<PreviewPane content={content} />}
+      preview={<PreviewPane content={content} theme={theme} />}
     />
   );
 }
