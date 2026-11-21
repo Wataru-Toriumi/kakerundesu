@@ -1,7 +1,7 @@
 import { Inline } from "@/components/layout/Inline";
 import { cn } from "@/lib/utils";
 
-export function PaneTitle({ title, meta, library = false }: { title: string; meta: string; library?: boolean }) {
+export function PaneTitle({ title, meta, library = false }: { title: string; meta?: string; library?: boolean }) {
   return (
     <Inline asChild align="center" justify="between">
       <div
@@ -11,7 +11,7 @@ export function PaneTitle({ title, meta, library = false }: { title: string; met
         )}
       >
         <span>{title}</span>
-        <span>{meta}</span>
+        {meta && <span>{meta}</span>}
       </div>
     </Inline>
   );
