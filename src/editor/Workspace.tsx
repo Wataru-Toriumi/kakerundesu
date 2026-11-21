@@ -4,8 +4,10 @@ import { LibrarySidebar } from "@/editor/LibrarySidebar";
 import { PreviewPane } from "@/editor/PreviewPane";
 import type { LibraryCreation } from "@/hooks/useLibraryCreation";
 import type { MarkdownLibrary } from "@/hooks/useMarkdownLibrary";
+import type { ViewMode } from "@/hooks/useViewMode";
 
 type WorkspaceProps = {
+  viewMode: ViewMode;
   content: string;
   theme: "light" | "dark";
   onChangeContent: (content: string) => void;
@@ -16,6 +18,7 @@ type WorkspaceProps = {
 };
 
 export function Workspace({
+  viewMode,
   content,
   theme,
   onChangeContent,
@@ -26,6 +29,7 @@ export function Workspace({
 }: WorkspaceProps) {
   return (
     <WorkspaceLayout
+      viewMode={viewMode}
       sidebar={
         <LibrarySidebar
           library={library}
