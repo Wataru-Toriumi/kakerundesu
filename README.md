@@ -1,3 +1,5 @@
+![万年筆と手帳を描いたアプリアイコン](src-tauri/icons/128x128.png)
+
 # かけるんです
 
 Tauri 2、React、TypeScriptで作ったデスクトップMarkdownエディタです。
