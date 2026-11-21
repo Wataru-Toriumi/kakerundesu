@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { isTauri } from "@tauri-apps/api/core";
 
 type EditorShortcuts = {
   enabled: boolean;
@@ -17,7 +18,7 @@ export function useEditorShortcuts({ enabled, onNewDocument, onOpenDocument, onS
       if (key === "s") {
         event.preventDefault();
         void onSaveDocument();
-      } else if (key === "o") {
+      } else if (key === "o" && !isTauri()) {
         event.preventDefault();
         void onOpenDocument();
       } else if (key === "n") {
