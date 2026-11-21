@@ -1,10 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>かけるんです</title>
   <defs>
-    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#e97a52"/>
-      <stop offset="1" stop-color="#b83f28"/>
+    <linearGradient id="paper" x2=".65" y2="1">
+      <stop stop-color="#fffbeb"/>
+      <stop offset="1" stop-color="#f4e4c7"/>
+    </linearGradient>
+    <linearGradient id="binding" x2="1" y2=".4">
+      <stop stop-color="#e77c51"/>
+      <stop offset="1" stop-color="#c35235"/>
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#background)"/>
-  <path d="M150 125h142c61 0 105 34 105 88 0 40-23 69-62 82 31 14 49 41 49 78v19H300v-15c0-31-18-47-54-47h-14v62h-82V125zm82 70v70h48c23 0 36-13 36-35s-13-35-36-35h-48z" fill="#fffaf0"/>
+
+  <!-- Cloth cover and the exposed edge of the page block. -->
+  <rect x="48" y="31" width="418" height="450" rx="66" fill="#923e2c"/>
+  <rect x="53" y="39" width="405" height="432" rx="59" fill="#d4bfa0"/>
+  <path d="M108 457h287q35 0 54-24-14 32-52 32H108z" fill="#f5e6cc"/>
+  <rect x="49" y="25" width="413" height="429" rx="62" fill="url(#paper)" stroke="#cfb799" stroke-width="3"/>
+  <path d="M111 24h2v431h-3q-62 0-62-62V87q0-63 63-63z" fill="url(#binding)"/>
+  <path d="M111 26h4v427h-4z" fill="#a9442c" opacity=".35"/>
+
+  <!-- A pooling ink stroke meets the tip of the pen. -->
+  <path d="M145 365c22-31 48-46 75-45 19 1 29 3 42-4-12 15-25 19-43 17-26-3-48 9-70 34-3 3-6 1-4-2z" fill="#ac4c34"/>
+
+  <g transform="translate(316 234) rotate(34)">
+    <!-- Lacquer barrel, brass collar and cut-out breather hole. -->
+    <path d="M-44-89v-35q0-16 16-16h56q16 0 16 16v35z" fill="#80412e"/>
+    <path d="M-40-91h80v19h-80z" fill="#d69955"/>
+    <path fill="#353d39" d="M-39-73h78c0 23 9 39 22 53q6 6 3 14L1 102l3-85a14 14 0 1 0-9 0l4 85L-64-6q-3-8 3-14c13-14 22-30 22-53z"/>
+  </g>
 </svg>
