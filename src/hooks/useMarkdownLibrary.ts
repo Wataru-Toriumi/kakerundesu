@@ -106,7 +106,7 @@ export function useMarkdownLibrary({ onMessage }: MarkdownLibraryOptions) {
     fileCount: listing.files.length,
     isLoading,
     libraryFolder,
-    libraryName: libraryFolder ? fileName(libraryFolder) : "フォルダ未設定",
+    libraryName: libraryFolder && (fileName(libraryFolder) || libraryFolder),
     collapsedFolders,
     toggleFolder,
     expandFolder,

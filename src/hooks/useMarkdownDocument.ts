@@ -13,7 +13,7 @@ const initialMarkdown = `# かけるんです
 - 「並列」でMarkdownを編集しながらプレビューを確認
 - \`⌘S\` または \`Ctrl+S\` で保存
 
-> 「開く」から既存の.mdファイルも編集できます。
+> FILES でフォルダを開き、一覧から編集するファイルを選べます。
 `;
 
 type DocumentState = {
