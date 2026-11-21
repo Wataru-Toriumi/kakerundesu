@@ -1,6 +1,12 @@
 import { useCallback, useState } from "react";
 import { createFolder, createMarkdownFile } from "@/lib/markdownClient";
 
+type CreationDraft = {
+  kind: "file" | "directory";
+  parentPath: string;
+  name: string;
+};
+
 type LibraryCreationOptions = {
   libraryFolder: string | null;
   confirmDiscard: () => boolean;
@@ -18,74 +24,46 @@ export function useLibraryCreation({
   onMessage,
   onRefreshLibrary,
 }: LibraryCreationOptions) {
-  const [creatingFolder, setCreatingFolder] = useState<string | null>(null);
-  const [newFileName, setNewFileName] = useState("無題.md");
-  const [creatingDirectory, setCreatingDirectory] = useState<string | null>(null);
-  const [newDirectoryName, setNewDirectoryName] = useState("新しいフォルダ");
+  const [draft, setDraft] = useState<CreationDraft | null>(null);
 
-  const startCreatingFile = useCallback((relativeFolder: string) => {
-    if (!libraryFolder || !confirmDiscard()) return;
-    onExpandFolder(relativeFolder);
-    setNewFileName("無題.md");
-    setCreatingDirectory(null);
-    setCreatingFolder(relativeFolder);
+  const startCreating = useCallback((kind: CreationDraft["kind"], parentPath: string) => {
+    if (!libraryFolder || (kind === "file" && !confirmDiscard())) return;
+    onExpandFolder(parentPath);
+    setDraft({ kind, parentPath, name: kind === "file" ? "無題.md" : "新しいフォルダ" });
   }, [confirmDiscard, libraryFolder, onExpandFolder]);
 
-  const createFile = useCallback(async (relativeFolder: string) => {
-    if (!libraryFolder || !newFileName.trim()) return;
-    try {
-      const path = await createMarkdownFile({
-        root: libraryFolder,
-        relativeFolder,
-        fileName: newFileName,
-      });
-      onCreateFile(path);
-      setCreatingFolder(null);
-      onExpandFolder(relativeFolder);
-      await onRefreshLibrary();
-    } catch (error) {
-      onMessage(`ファイルを作成できませんでした: ${String(error)}`);
-    }
-  }, [libraryFolder, newFileName, onCreateFile, onExpandFolder, onMessage, onRefreshLibrary]);
-
-  const startCreatingDirectory = useCallback((relativeParent: string) => {
-    if (!libraryFolder) return;
-    onExpandFolder(relativeParent);
-    setNewDirectoryName("新しいフォルダ");
-    setCreatingFolder(null);
-    setCreatingDirectory(relativeParent);
-  }, [libraryFolder, onExpandFolder]);
-
-  const createDirectory = useCallback(async (relativeParent: string) => {
-    if (!libraryFolder || !newDirectoryName.trim()) return;
-    try {
-      await createFolder({
-        root: libraryFolder,
-        relativeParent,
-        folderName: newDirectoryName,
-      });
-      setCreatingDirectory(null);
-      onMessage(`${newDirectoryName.trim()} を作成しました`);
-      await onRefreshLibrary();
-    } catch (error) {
-      onMessage(`フォルダを作成できませんでした: ${String(error)}`);
-    }
-  }, [libraryFolder, newDirectoryName, onMessage, onRefreshLibrary]);
-
-  return {
-    creatingFolder,
-    newFileName,
-    startCreatingFile,
-    setNewFileName,
-    createFile,
-    cancelCreatingFile: () => setCreatingFolder(null),
-    creatingDirectory,
-    newDirectoryName,
-    startCreatingDirectory,
-    setNewDirectoryName,
-    createDirectory,
-    cancelCreatingDirectory: () => setCreatingDirectory(null),
+  const setName = (name: string) => {
+    setDraft((current) => current && { ...current, name });
   };
+
+  const submit = async () => {
+    if (!libraryFolder || !draft || !draft.name.trim()) return;
+    const { kind, parentPath, name } = draft;
+    const closeSubmittedDraft = () => setDraft((current) => current === draft ? null : current);
+
+    try {
+      if (kind === "file") {
+        const path = await createMarkdownFile({
+          root: libraryFolder,
+          relativeFolder: parentPath,
+          fileName: name,
+        });
+        onCreateFile(path);
+        closeSubmittedDraft();
+        onExpandFolder(parentPath);
+      } else {
+        await createFolder({ root: libraryFolder, relativeParent: parentPath, folderName: name });
+        closeSubmittedDraft();
+        onMessage(`${name.trim()} を作成しました`);
+      }
+      await onRefreshLibrary();
+    } catch (error) {
+      const item = kind === "file" ? "ファイル" : "フォルダ";
+      onMessage(`${item}を作成できませんでした: ${String(error)}`);
+    }
+  };
+
+  return { draft, startCreating, setName, submit, cancel: () => setDraft(null) };
 }
 
 export type LibraryCreation = ReturnType<typeof useLibraryCreation>;

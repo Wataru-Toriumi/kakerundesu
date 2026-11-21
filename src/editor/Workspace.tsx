@@ -25,15 +25,17 @@ export function Workspace({
   libraryCreation,
 }: WorkspaceProps) {
   return (
-    <WorkspaceLayout>
-      <LibrarySidebar
-        library={library}
-        creation={libraryCreation}
-        activePath={activePath}
-        onOpenFile={onOpenFile}
-      />
-      <EditorPane content={content} theme={theme} onChange={onChangeContent} />
-      <PreviewPane content={content} />
-    </WorkspaceLayout>
+    <WorkspaceLayout
+      sidebar={
+        <LibrarySidebar
+          library={library}
+          creation={libraryCreation}
+          activePath={activePath}
+          onOpenFile={onOpenFile}
+        />
+      }
+      editor={<EditorPane content={content} theme={theme} onChange={onChangeContent} />}
+      preview={<PreviewPane content={content} />}
+    />
   );
 }
