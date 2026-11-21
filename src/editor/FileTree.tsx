@@ -47,28 +47,19 @@ export function FileTree({
               <span>{node.name}</span>
             </TreeRow>
             <FolderActions>
-              <FolderAction onClick={() => creation.startCreatingFile(node.key)} label={`${node.name}に新規ファイルを作成`} title="新規ファイル"><Plus /></FolderAction>
-              <FolderAction onClick={() => creation.startCreatingDirectory(node.key)} label={`${node.name}に新規フォルダを作成`} title="新規フォルダ"><FolderPlus /></FolderAction>
+              <FolderAction onClick={() => creation.startCreating("file", node.key)} label={`${node.name}に新規ファイルを作成`} title="新規ファイル"><Plus /></FolderAction>
+              <FolderAction onClick={() => creation.startCreating("directory", node.key)} label={`${node.name}に新規フォルダを作成`} title="新規フォルダ"><FolderPlus /></FolderAction>
             </FolderActions>
           </FolderLine>
-          {creation.creatingFolder === node.key && (
+          {creation.draft?.parentPath === node.key && (
             <LibraryItemCreationForm
-              kind="file"
+              key={creation.draft.kind}
+              kind={creation.draft.kind}
               depth={depth}
-              name={creation.newFileName}
-              onChangeName={creation.setNewFileName}
-              onSubmit={() => creation.createFile(node.key)}
-              onCancel={creation.cancelCreatingFile}
-            />
-          )}
-          {creation.creatingDirectory === node.key && (
-            <LibraryItemCreationForm
-              kind="directory"
-              depth={depth}
-              name={creation.newDirectoryName}
-              onChangeName={creation.setNewDirectoryName}
-              onSubmit={() => creation.createDirectory(node.key)}
-              onCancel={creation.cancelCreatingDirectory}
+              name={creation.draft.name}
+              onChangeName={creation.setName}
+              onSubmit={creation.submit}
+              onCancel={creation.cancel}
             />
           )}
           {!collapsed && (

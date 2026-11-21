@@ -91,9 +91,9 @@ describe("useLibraryCreation", () => {
     const callbacks = renderCreation();
     mocks.createMarkdownFile.mockResolvedValue("/notes/drafts/post.md");
 
-    act(() => callbacks.getCreation().startCreatingFile("drafts"));
-    act(() => callbacks.getCreation().setNewFileName("post.md"));
-    await act(() => callbacks.getCreation().createFile("drafts"));
+    act(() => callbacks.getCreation().startCreating("file", "drafts"));
+    act(() => callbacks.getCreation().setName("post.md"));
+    await act(() => callbacks.getCreation().submit());
 
     expect(mocks.createMarkdownFile).toHaveBeenCalledWith({
       root: "/notes",
@@ -103,16 +103,16 @@ describe("useLibraryCreation", () => {
     expect(callbacks.onCreateFile).toHaveBeenCalledWith("/notes/drafts/post.md");
     expect(callbacks.onExpandFolder).toHaveBeenCalledWith("drafts");
     expect(callbacks.onRefreshLibrary).toHaveBeenCalledOnce();
-    expect(callbacks.getCreation().creatingFolder).toBeNull();
+    expect(callbacks.getCreation().draft).toBeNull();
   });
 
   it("creates a directory and reports its completion", async () => {
     const callbacks = renderCreation();
     mocks.createFolder.mockResolvedValue(undefined);
 
-    act(() => callbacks.getCreation().startCreatingDirectory("archive"));
-    act(() => callbacks.getCreation().setNewDirectoryName("2026"));
-    await act(() => callbacks.getCreation().createDirectory("archive"));
+    act(() => callbacks.getCreation().startCreating("directory", "archive"));
+    act(() => callbacks.getCreation().setName("2026"));
+    await act(() => callbacks.getCreation().submit());
 
     expect(mocks.createFolder).toHaveBeenCalledWith({
       root: "/notes",
@@ -121,6 +121,25 @@ describe("useLibraryCreation", () => {
     });
     expect(callbacks.onMessage).toHaveBeenCalledWith("2026 を作成しました");
     expect(callbacks.onRefreshLibrary).toHaveBeenCalledOnce();
-    expect(callbacks.getCreation().creatingDirectory).toBeNull();
+    expect(callbacks.getCreation().draft).toBeNull();
+  });
+
+  it("keeps the new form open when an earlier creation finishes", async () => {
+    const { getCreation } = renderCreation();
+    let finishCreation!: (path: string) => void;
+    mocks.createMarkdownFile.mockImplementationOnce(() => new Promise((resolve) => {
+      finishCreation = resolve;
+    }));
+
+    act(() => getCreation().startCreating("file", "drafts"));
+    const pending = getCreation().submit();
+    act(() => getCreation().startCreating("directory", "archive"));
+    act(() => getCreation().setName("2026"));
+    await act(async () => {
+      finishCreation("/notes/drafts/無題.md");
+      await pending;
+    });
+
+    expect(getCreation().draft).toEqual({ kind: "directory", parentPath: "archive", name: "2026" });
   });
 });
