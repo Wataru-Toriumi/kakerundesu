@@ -1,16 +1,12 @@
 import { Box } from "@/components/layout/Box";
-import { Grid } from "@/components/layout/Grid";
 import { Inline } from "@/components/layout/Inline";
 import { Stack } from "@/components/layout/Stack";
+import appIcon from "../../../src-tauri/icons/128x128.png";
 
 export function Brand({ fileName, isDirty }: { fileName: string; isDirty: boolean }) {
   return (
     <Inline align="center" gap="3" minWidth="0">
-      <Grid asChild align="center" height="34px" justifyItems="center" width="34px">
-        <span className="rounded-[10px] bg-[var(--app-accent)] font-extrabold text-white">
-          か
-        </span>
-      </Grid>
+      <img src={appIcon} alt="" width={34} height={34} className="shrink-0" />
       <Stack minWidth="0">
         <strong className="text-sm tracking-[.02em]">かけるんです</strong>
         <Box asChild maxWidth="42vw" mt="2px">
