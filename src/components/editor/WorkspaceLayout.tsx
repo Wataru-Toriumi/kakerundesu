@@ -1,7 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import type { ViewMode } from "@/hooks/useViewMode";
 
 type WorkspaceLayoutProps = {
+  viewMode: ViewMode;
   sidebar: ReactNode;
   editor: ReactNode;
   preview: ReactNode;
@@ -19,7 +21,7 @@ const panelSizes = {
   },
 };
 
-export function WorkspaceLayout({ sidebar, editor, preview }: WorkspaceLayoutProps) {
+export function WorkspaceLayout({ viewMode, sidebar, editor, preview }: WorkspaceLayoutProps) {
   const [isNarrow, setIsNarrow] = useState(() => window.matchMedia(narrowScreen).matches);
 
   useEffect(() => {
@@ -34,11 +36,22 @@ export function WorkspaceLayout({ sidebar, editor, preview }: WorkspaceLayoutPro
 
   return (
     <ResizablePanelGroup orientation={orientation} className="min-h-0">
-      <ResizablePanel {...sizes.sidebar}>{sidebar}</ResizablePanel>
+      <ResizablePanel id="files" {...sizes.sidebar}>{sidebar}</ResizablePanel>
       <ResizableHandle />
-      <ResizablePanel {...sizes.document}>{editor}</ResizablePanel>
-      <ResizableHandle />
-      <ResizablePanel {...sizes.document}>{preview}</ResizablePanel>
+      <ResizablePanel
+        id="document"
+        minSize={sizes.document.minSize}
+        defaultSize={viewMode === "split" ? sizes.document.defaultSize : undefined}
+      >
+        <div hidden={viewMode === "preview"} className="h-full">{editor}</div>
+        {viewMode === "preview" && preview}
+      </ResizablePanel>
+      {viewMode === "split" && (
+        <>
+          <ResizableHandle />
+          <ResizablePanel id="preview" {...sizes.document}>{preview}</ResizablePanel>
+        </>
+      )}
     </ResizablePanelGroup>
   );
 }

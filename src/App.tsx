@@ -8,6 +8,7 @@ import { useLibraryCreation } from "@/hooks/useLibraryCreation";
 import { useMarkdownDocument } from "@/hooks/useMarkdownDocument";
 import { useMarkdownLibrary } from "@/hooks/useMarkdownLibrary";
 import { useTheme } from "@/hooks/useTheme";
+import { useViewMode } from "@/hooks/useViewMode";
 
 function App() {
   const [message, setMessage] = useState("新しい文書");
@@ -24,6 +25,7 @@ function App() {
     onRefreshLibrary: library.refreshLibrary,
   });
   const { theme, toggleTheme } = useTheme();
+  const { viewMode, setViewMode } = useViewMode();
 
   useEditorShortcuts({
     onNewDocument: documentState.newDocument,
@@ -37,12 +39,15 @@ function App() {
         fileName={documentState.currentFileName}
         isDirty={documentState.isDirty}
         theme={theme}
+        viewMode={viewMode}
+        onChangeViewMode={setViewMode}
         onNewDocument={documentState.newDocument}
         onOpenDocument={documentState.openDocument}
         onSaveDocument={documentState.saveDocument}
         onToggleTheme={toggleTheme}
       />
       <Workspace
+        viewMode={viewMode}
         content={documentState.content}
         theme={theme}
         onChangeContent={documentState.setContent}
