@@ -84,6 +84,16 @@ describe("useMarkdownDocument", () => {
     return { getDocument, onMessage };
   }
 
+  it("starts with an empty untitled document and no pending edits", () => {
+    const { getDocument } = renderDocument();
+    expect(getDocument()).toMatchObject({
+      content: "",
+      currentFileName: "無題.md",
+      filePath: null,
+      isDirty: false,
+    });
+  });
+
   it("replaces related state when creating and loading documents", async () => {
     const { getDocument, onMessage } = renderDocument();
     vi.spyOn(window, "confirm").mockReturnValue(true);
