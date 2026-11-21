@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useLibraryWatcher } from "@/hooks/useLibraryWatcher";
-import { listMarkdownFiles } from "@/lib/markdownClient";
-import {
-  buildFileTree,
-  type LibraryFolder,
-  type MarkdownFile,
-} from "@/lib/markdownLibrary";
+import { listMarkdownFiles, type LibraryListing } from "@/lib/markdownClient";
+import { buildFileTree } from "@/lib/markdownLibrary";
 import { fileName } from "@/lib/path";
+
+const emptyListing: LibraryListing = { files: [], folders: [] };
 
 type MarkdownLibraryOptions = {
   onMessage: (message: string) => void;
@@ -17,8 +15,7 @@ export function useMarkdownLibrary({ onMessage }: MarkdownLibraryOptions) {
   const [libraryFolder, setLibraryFolder] = useState<string | null>(() =>
     localStorage.getItem("kakerundesu-library-folder"),
   );
-  const [libraryFiles, setLibraryFiles] = useState<MarkdownFile[]>([]);
-  const [libraryFolders, setLibraryFolders] = useState<LibraryFolder[]>([]);
+  const [listing, setListing] = useState(emptyListing);
   const [isLoading, setIsLoading] = useState(false);
   const [collapsedFolders, setCollapsedFolders] = useState<Set<string>>(() => new Set());
   const activeLibraryFolder = useRef(libraryFolder);
@@ -36,23 +33,20 @@ export function useMarkdownLibrary({ onMessage }: MarkdownLibraryOptions) {
     if (folder !== activeLibraryFolder.current) return;
     const refreshId = ++latestRefreshId.current;
     if (!folder) {
-      setLibraryFiles([]);
-      setLibraryFolders([]);
+      setListing(emptyListing);
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
     try {
-      const listing = await listMarkdownFiles(folder);
+      const nextListing = await listMarkdownFiles(folder);
       if (refreshId !== latestRefreshId.current || folder !== activeLibraryFolder.current) return;
-      setLibraryFiles(listing.files);
-      setLibraryFolders(listing.folders);
-      onMessage(`${listing.files.length}件のMarkdownファイルを読み込みました`);
+      setListing(nextListing);
+      onMessage(`${nextListing.files.length}件のMarkdownファイルを読み込みました`);
     } catch (error) {
       if (refreshId !== latestRefreshId.current || folder !== activeLibraryFolder.current) return;
-      setLibraryFiles([]);
-      setLibraryFolders([]);
+      setListing(emptyListing);
       onMessage(`フォルダを読み込めませんでした: ${String(error)}`);
     } finally {
       if (refreshId === latestRefreshId.current && folder === activeLibraryFolder.current) {
@@ -103,13 +97,13 @@ export function useMarkdownLibrary({ onMessage }: MarkdownLibraryOptions) {
   });
 
   const nodes = useMemo(
-    () => buildFileTree(libraryFiles, libraryFolders),
-    [libraryFiles, libraryFolders],
+    () => buildFileTree(listing.files, listing.folders),
+    [listing],
   );
 
   return {
     nodes,
-    fileCount: libraryFiles.length,
+    fileCount: listing.files.length,
     isLoading,
     libraryFolder,
     libraryName: libraryFolder ? fileName(libraryFolder) : "フォルダ未設定",
