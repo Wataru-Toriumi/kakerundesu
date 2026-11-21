@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export type Theme = "light" | "dark";
 
@@ -12,9 +12,5 @@ export function useTheme() {
     localStorage.setItem("kakerundesu-theme", theme);
   }, [theme]);
 
-  const toggleTheme = useCallback(() => {
-    setTheme((current) => current === "light" ? "dark" : "light");
-  }, []);
-
-  return { theme, toggleTheme };
+  return { theme, setTheme };
 }
