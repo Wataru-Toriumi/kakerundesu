@@ -1,16 +1,16 @@
 import { useEffect } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 
-type EditorShortcuts = {
+export type DocumentActions = {
   enabled: boolean;
   onNewDocument: () => void;
   onOpenDocument: () => void | Promise<void>;
   onSaveDocument: () => void | Promise<void>;
 };
 
-export function useEditorShortcuts({ enabled, onNewDocument, onOpenDocument, onSaveDocument }: EditorShortcuts) {
+export function useEditorShortcuts({ enabled, onNewDocument, onOpenDocument, onSaveDocument }: DocumentActions) {
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || isTauri()) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (!event.metaKey && !event.ctrlKey) return;
 
@@ -18,7 +18,7 @@ export function useEditorShortcuts({ enabled, onNewDocument, onOpenDocument, onS
       if (key === "s") {
         event.preventDefault();
         void onSaveDocument();
-      } else if (key === "o" && !isTauri()) {
+      } else if (key === "o") {
         event.preventDefault();
         void onOpenDocument();
       } else if (key === "n") {

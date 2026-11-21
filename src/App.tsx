@@ -28,21 +28,16 @@ function App() {
   });
   const { theme, setTheme } = useTheme();
   const [isSettingsOpen, setSettingsOpen] = useState(false);
-  useAppMenu({
-    onOpenSettings: () => setSettingsOpen(true),
-    onOpenDocument: () => {
-      if (!isSettingsOpen) void documentState.openDocument();
-    },
-    onMessage: setMessage,
-  });
   const { viewMode, setViewMode } = useViewMode();
 
-  useEditorShortcuts({
+  const documentActions = {
     enabled: !isSettingsOpen,
     onNewDocument: documentState.newDocument,
     onOpenDocument: documentState.openDocument,
     onSaveDocument: documentState.saveDocument,
-  });
+  };
+  useEditorShortcuts(documentActions);
+  useAppMenu({ ...documentActions, onOpenSettings: () => setSettingsOpen(true), onMessage: setMessage });
 
   return (
     <AppShell>
@@ -51,8 +46,6 @@ function App() {
         isDirty={documentState.isDirty}
         viewMode={viewMode}
         onChangeViewMode={setViewMode}
-        onNewDocument={documentState.newDocument}
-        onSaveDocument={documentState.saveDocument}
         onOpenSettings={() => setSettingsOpen(true)}
       />
       <Workspace

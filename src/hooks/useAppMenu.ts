@@ -2,18 +2,22 @@ import { useEffect, useEffectEvent } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
-type MenuAction = "open-settings" | "open-document";
+import type { DocumentActions } from "@/hooks/useEditorShortcuts";
 
-type AppMenuOptions = {
+type MenuAction = "open-settings" | "new-document" | "open-document" | "save-document";
+
+type AppMenuOptions = DocumentActions & {
   onOpenSettings: () => void;
-  onOpenDocument: () => void;
   onMessage: (message: string) => void;
 };
 
-export function useAppMenu({ onOpenSettings, onOpenDocument, onMessage }: AppMenuOptions) {
+export function useAppMenu({ enabled, onOpenSettings, onNewDocument, onOpenDocument, onSaveDocument, onMessage }: AppMenuOptions) {
   const onAction = useEffectEvent((action: MenuAction) => {
     if (action === "open-settings") onOpenSettings();
-    if (action === "open-document") onOpenDocument();
+    if (!enabled) return;
+    if (action === "new-document") onNewDocument();
+    if (action === "open-document") void onOpenDocument();
+    if (action === "save-document") void onSaveDocument();
   });
 
   useEffect(() => {

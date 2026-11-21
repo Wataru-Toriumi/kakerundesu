@@ -4,6 +4,8 @@ use tauri::{
 };
 
 const OPEN_SETTINGS: &str = "open-settings";
+const NEW_DOCUMENT: &str = "new-document";
+const SAVE_DOCUMENT: &str = "save-document";
 const OPEN_DOCUMENT: &str = "open-document";
 
 pub fn build(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
@@ -15,6 +17,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         app_menu.insert_items(&[&settings, &PredefinedMenuItem::separator(app)?], 2)?;
     }
 
+    let new = MenuItem::with_id(app, NEW_DOCUMENT, "新規作成", true, Some("CmdOrCtrl+N"))?;
     let open = MenuItem::with_id(
         app,
         OPEN_DOCUMENT,
@@ -22,22 +25,34 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         true,
         Some("CmdOrCtrl+O"),
     )?;
+    let save = MenuItem::with_id(app, SAVE_DOCUMENT, "保存", true, Some("CmdOrCtrl+S"))?;
     for item in menu.items()? {
         if let Some(submenu) = item.as_submenu() {
             if submenu.text()? == "File" {
                 submenu.set_text("ファイル")?;
-                submenu.insert_items(&[&open, &PredefinedMenuItem::separator(app)?], 0)?;
+                submenu.insert_items(
+                    &[&new, &open, &save, &PredefinedMenuItem::separator(app)?],
+                    0,
+                )?;
                 return Ok(menu);
             }
         }
     }
-    menu.prepend(&Submenu::with_items(app, "ファイル", true, &[&open])?)?;
+    menu.prepend(&Submenu::with_items(
+        app,
+        "ファイル",
+        true,
+        &[&new, &open, &save],
+    )?)?;
     Ok(menu)
 }
 
 pub fn handle(app: &AppHandle, event: MenuEvent) {
     let action = event.id().as_ref();
-    if !matches!(action, OPEN_SETTINGS | OPEN_DOCUMENT) {
+    if !matches!(
+        action,
+        OPEN_SETTINGS | NEW_DOCUMENT | OPEN_DOCUMENT | SAVE_DOCUMENT
+    ) {
         return;
     }
     if let Some(window) = app.get_webview_window("main") {
