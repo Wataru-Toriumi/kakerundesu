@@ -3,19 +3,6 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import { readMarkdownFile, writeMarkdownFile } from "@/lib/markdownClient";
 import { fileName } from "@/lib/path";
 
-const initialMarkdown = `# かけるんです
-
-軽やかに書ける、デスクトップMarkdownエディタです。
-
-## はじめかた
-
-- ヘッダーで表示モードを選択
-- 「並列」でMarkdownを編集しながらプレビューを確認
-- \`⌘S\` または \`Ctrl+S\` で保存
-
-> FILES でフォルダを開き、一覧から編集するファイルを選べます。
-`;
-
 type DocumentState = {
   content: string;
   savedContent: string;
@@ -23,8 +10,8 @@ type DocumentState = {
 };
 
 const initialDocument: DocumentState = {
-  content: initialMarkdown,
-  savedContent: initialMarkdown,
+  content: "",
+  savedContent: "",
   filePath: null,
 };
 
